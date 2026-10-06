@@ -5,11 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>発句</title>
 <meta name="description" content="Иероглифы, порядок черт и каллиграфия на хокку Басё и его последователей">
-<meta name="theme-color" content="#EDEFEA" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#141619" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0B0B0C">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="発句">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -22,7 +21,7 @@
 @font-face{font-family:"Shippori Mincho";src:url(Shippori-500.woff) format("woff");font-weight:500;font-display:swap}
 @font-face{font-family:"Shippori Mincho";src:url(Shippori-700.woff) format("woff");font-weight:700;font-display:swap}
 @font-face{font-family:"Yuji Syuku";src:url(YujiSyuku.woff) format("woff");font-weight:400;font-display:swap}
-:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{color-scheme:dark;background:#0B0B0C;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0;overscroll-behavior:none;-webkit-text-size-adjust:100%}
 img{max-width:100%}[hidden]{display:none!important}
 
@@ -46,13 +45,13 @@ img{max-width:100%}[hidden]{display:none!important}
   --r:14px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --paper:#141619; --card:#1D2024; --sunk:#262A2F; --ink:#ECE9E2; --ink2:#A2A6AC; --line:#33383E;
+  --paper:#0B0B0C; --card:#161719; --sunk:#202125; --ink:#ECE9E2; --ink2:#A2A6AC; --line:#2C2E32;
   --ghost:rgba(236,233,226,.14); --faint:rgba(236,233,226,.26); --good-line:#86C08B; --shu-line:#E2694F;
   --ai:#9DB5EA; --ai-deep:#6F8CC9; --ai-soft:#24304A; --on-ai:#11151C;
   --shu:#E2694F; --on-shu:#1A0F0B;
   --good:#86C08B; --good-soft:#1E3322; --bad:#E78C9E; --bad-soft:#3A2129; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --paper:#141619; --card:#1D2024; --sunk:#262A2F; --ink:#ECE9E2; --ink2:#A2A6AC; --line:#33383E;
+  --paper:#0B0B0C; --card:#161719; --sunk:#202125; --ink:#ECE9E2; --ink2:#A2A6AC; --line:#2C2E32;
   --ghost:rgba(236,233,226,.14); --faint:rgba(236,233,226,.26); --good-line:#86C08B; --shu-line:#E2694F;
   --ai:#9DB5EA; --ai-deep:#6F8CC9; --ai-soft:#24304A; --on-ai:#11151C;
   --shu:#E2694F; --on-shu:#1A0F0B;
@@ -334,9 +333,17 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .node.rev.open,.node.rev:not(.cur):not(.done){box-shadow:0 5px 0 var(--line),inset 0 0 0 3px var(--shu)}
 .refill{display:flex;align-items:center;gap:10px;justify-content:center;font-size:13px;color:var(--ink2)}
 .refill .hearts{flex:none}
+
+/* black ground with daily ink painting */
+#bgart{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#app{position:relative;z-index:1}
+.top{background:color-mix(in srgb,var(--paper) 82%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.daily{text-align:center;font-size:12px;color:var(--ink2);margin-top:14px}
+.daily b{font:18px KHKai,KHKaiB,var(--f-brush);color:var(--ink);margin-right:4px}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 
+<canvas id="bgart" aria-hidden="true"></canvas>
 </head>
 <body>
 <div id="app">
@@ -1172,7 +1179,7 @@ const CALREL="遊親畳跡廻痩隣雲仏";
 
 // ===== Сумиэ: процедурная живопись тушью =====
 const SUMI=(function(){
-const INK='29,27,25';
+let INK='29,27,25';
 function painter(cv,seed){
   const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
   let r=(seed>>>0)||7; const rnd=()=>{r^=r<<13;r>>>=0;r^=r>>>17;r^=r<<5;r>>>=0;return (r%1e6)/1e6;};
@@ -1339,7 +1346,48 @@ function el(id,seal,cls){const cv=document.createElement('canvas');cv.width=720;
   const go=()=>{try{render(cv,id,seal);}catch(e){}};
   if(document.fonts&&document.fonts.load) document.fonts.load('40px KHKai','夢').then(go,go); else go();
   return cv;}
-return {el,render,SC};
+
+// ---- фон: бледные белые картины на чёрном (портретный формат) ----
+const BG={
+ bamboo:{jp:'竹',ru:'бамбук',f:P=>{
+   [[.72,1.02,.66,.05,.03],[.86,1.02,.9,.12,.022],[.6,1.02,.52,.3,.016]].forEach(([x0,y0,x1,y1,w])=>{
+     const segs=7;for(let i=0;i<segs;i++){const t0=i/segs+.008,t1=(i+1)/segs-.008;
+       P.stroke([[x0+(x1-x0)*t0,y0+(y1-y0)*t0],[x0+(x1-x0)*t1,y0+(y1-y0)*t1]],w,{a:.85,taper:[.9,.75,.9],dry:.25});
+       const nx=x0+(x1-x0)*t1,ny=y0+(y1-y0)*t1;P.stroke([[nx-w*.9,ny+.004],[nx+w*.9,ny-.004]],w*.3,{a:.9,dry:.1});}});
+   const leaf=(x,y,a,l)=>P.stroke([[x,y],[x+Math.cos(a)*l*.5,y+Math.sin(a)*l*.5*P.W/P.H],[x+Math.cos(a)*l,y+Math.sin(a)*l*P.W/P.H]],.035,{a:.8,taper:[.25,1,.02],dry:.15});
+   [[.7,.3],[.66,.18],[.88,.35],[.84,.22],[.56,.42]].forEach(([x,y])=>{const n=4;for(let i=0;i<n;i++)leaf(x,y,P.rr(-2.9,-.2)+(i%2?1.2:0),P.rr(.14,.24));});}},
+ orchid:{jp:'蘭',ru:'орхидея',f:P=>{
+   const bx=.66,by=.97;
+   [[-.42,.62,.5],[-.3,.75,.62],[-.12,.8,.55],[.12,.7,.42],[.22,.5,.6],[-.55,.38,.45],[.02,.9,.3]].forEach(([dx,h,bend])=>{
+     P.stroke([[bx,by],[bx+dx*.35,by-h*.55],[bx+dx*.75,by-h*.92],[bx+dx*(1+bend*.4),by-h*(1-bend*.35)]],.011,{a:.85,taper:[.7,1,.02],dry:.15});});
+   [[.44,.58],[.5,.5],[.4,.66]].forEach(([x,y])=>{for(let i=0;i<5;i++){const a=-1.57+(i-2)*.7;P.stroke([[x,y],[x+Math.cos(a)*.04,y+Math.sin(a)*.025]],.01,{a:.8,taper:[.3,1,.15]});}P.blot(x,y,.004,.9);});
+   P.stroke([[.64,.95],[.55,.75],[.48,.62],[.44,.56]],.003,{a:.6});}},
+ plum:{jp:'梅',ru:'слива',f:P=>{
+   P.stroke([[1.02,.98],[.86,.78],[.88,.62],[.74,.48]],.06,{a:.85,taper:[1,.9,.5],dry:.7});
+   P.branch(.74,.48,-2.4,.28,.03,3);P.branch(.87,.66,-2.9,.3,.022,2);P.branch(.8,.55,-1.6,.22,.018,2);
+   for(let i=0;i<14;i++){const x=P.rr(.35,.9),y=P.rr(.2,.6);const r=P.rr(.02,.03);
+     P.stroke(P.ell(x,y,r,r*.9,0,6.3,18),.0025,{a:.75,dry:.2,taper:[.6,1,.6]});P.blot(x,y,.003,.9);}}},
+ chrys:{jp:'菊',ru:'хризантема',f:P=>{
+   [[.68,.38,.11],[.82,.56,.08],[.55,.6,.07]].forEach(([x,y,r])=>{
+     for(let i=0;i<26;i++){const a=i/26*6.283+P.rr(-.1,.1),l=r*P.rr(.55,1);P.stroke([[x+Math.cos(a)*l*.25,y+Math.sin(a)*l*.25*P.W/P.H],[x+Math.cos(a)*l,y+Math.sin(a)*l*P.W/P.H]],r*.12,{a:.7,taper:[.3,1,.5],dry:.2});}
+     const sx=x+P.rr(-.05,.05);P.stroke([[x,y+r*.6],[sx,1.02]],.006,{a:.7});
+     for(let k=0;k<3;k++){const yy=P.rr(y+.12,.95),side=k%2?1:-1;P.stroke([[ (x+sx)/2,yy],[(x+sx)/2+side*.06,yy-.02],[(x+sx)/2+side*.1,yy+.01]],.03,{a:.6,taper:[.3,1,.1],dry:.3});}});}},
+ pine:{jp:'松',ru:'сосна',f:P=>{
+   P.stroke([[.95,1.02],[.82,.8],[.9,.6],[.7,.42],[.45,.36]],.05,{a:.85,taper:[1,.8,.3],dry:.7});
+   P.stroke([[.82,.55],[.98,.45]],.02,{a:.8,dry:.6});
+   [[.45,.34],[.58,.38],[.72,.4],[.97,.43],[.86,.6]].forEach(([x,y])=>{for(let i=0;i<16;i++){const a=-3.14+i/15*3.14;P.stroke([[x,y],[x+Math.cos(a)*.06,y+Math.sin(a)*.03]],.002,{a:.7,dry:0});}});}},
+ lotus:{jp:'蓮',ru:'лотос',f:P=>{
+   P.stroke([[.6,1.02],[.62,.8],[.6,.56]],.006,{a:.75});P.stroke([[.82,1.02],[.8,.84],[.84,.7]],.006,{a:.7});P.stroke([[.4,1.02],[.42,.9],[.38,.82]],.005,{a:.6});
+   P.wash(P.ell(.84,.68,.15,.05,0,6.3,30),.3,.006,'240,236,228');P.stroke(P.ell(.84,.68,.15,.05,.2,6.1,30),.004,{a:.6,dry:.4});
+   for(let i=0;i<6;i++){const a=-1.4+i*.6;P.stroke([[.84,.68],[.84+Math.cos(a)*.13,.68+Math.sin(a)*.04]],.002,{a:.4});}
+   for(let i=-3;i<=3;i++){const a=-1.57+i*.33;P.stroke([[.6,.56],[.6+Math.cos(a)*.08,.56+Math.sin(a)*.08],[.6+Math.cos(a)*.16,.56+Math.sin(a)*.16*P.W/P.H]],.05-Math.abs(i)*.005,{a:.55,taper:[.3,1,.05],dry:.2});}
+   P.wash(P.ell(.38,.8,.035,.02,0,6.3,16),.4,.004,'240,236,228');P.stroke(P.ell(.38,.8,.035,.02,0,6.3,16),.003,{a:.6});}}
+};
+function renderBg(cv,key,alpha){const d=BG[key]||BG.bamboo;const old=INK;INK='240,236,228';
+  const P=painter(cv,[...key].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,11)+(Date.now()%997));
+  P.ctx.clearRect(0,0,cv.width,cv.height);P.ctx.save();P.ctx.globalAlpha=alpha||.16;try{d.f(P);}catch(e){}P.ctx.restore();INK=old;}
+
+return {el,render,SC,BG,renderBg};
 })();
 
 
@@ -1397,6 +1445,13 @@ const ico={
 };
 function speak(text){try{const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 
+// ---------- чёрная тема и картина дня ----------
+document.documentElement.dataset.theme='dark';
+const BGKEY=(()=>{const keys=Object.keys(SUMI.BG);let last=null;try{last=localStorage.getItem('kh-bg');}catch(e){}
+  const pool=keys.filter(k=>k!==last);const k=pool[Math.floor(Math.random()*pool.length)];try{localStorage.setItem('kh-bg',k);}catch(e){}return k;})();
+function paintBg(){const cv=document.getElementById('bgart');if(!cv)return;const d=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(innerWidth*d);cv.height=Math.round(innerHeight*d);SUMI.renderBg(cv,BGKEY,.2);}
+paintBg();let bgT=null;addEventListener('resize',()=>{clearTimeout(bgT);bgT=setTimeout(paintBg,250);});
 // ---------- tabs ----------
 let tab='path';
 ['path','poems','kanji'].forEach(t=>$('#tab-'+t).addEventListener('click',()=>{tab=t;render();}));
@@ -1440,6 +1495,7 @@ function viewPath(){
   f.append(p);
   let armed=false;
   const reset=h('button',{class:'btn ghost',onclick:e=>{ if(!armed){armed=true;e.target.textContent='Точно стереть всё? Нажмите ещё раз';return;} S=def();save();render();}},'Сбросить прогресс');
+  const bgd=SUMI.BG[BGKEY];f.append(h('p',{class:'daily'},h('b',{lang:'ja'},bgd.jp),'Картина дня — '+bgd.ru+'. При каждом запуске новая.'));
   f.append(h('div',{class:'settings'},
     h('button',{class:'btn ghost',onclick:()=>{S.unlockAll=!S.unlockAll;save();render();}},S.unlockAll?'Вернуть порядок уроков':'Открыть все уроки'),
     h('button',{class:'btn ghost',onclick:openBackup},'Резервная копия'),
