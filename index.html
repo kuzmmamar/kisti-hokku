@@ -340,10 +340,20 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .top{background:color-mix(in srgb,var(--paper) 82%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .daily{text-align:center;font-size:12px;color:var(--ink2);margin-top:14px}
 .daily b{font:18px KHKai,KHKaiB,var(--f-brush);color:var(--ink);margin-right:4px}
+
+/* scrolling ink art */
+#view{position:relative}
+#view>*:not(.scrollart):not(.top){position:relative;z-index:1}
+.top{z-index:3!important}
+.scrollart{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:0}
+.scrollart canvas{position:absolute;left:0;width:100%}
+.path{position:relative}
+.pathart{position:absolute;left:0;top:0;z-index:0}
+.path>.ustep{position:relative;z-index:1}
+.dash.gap{background:none;height:30px}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 
-<canvas id="bgart" aria-hidden="true"></canvas>
 </head>
 <body>
 <div id="app">
@@ -1387,7 +1397,36 @@ function renderBg(cv,key,alpha){const d=BG[key]||BG.bamboo;const old=INK;INK='24
   const P=painter(cv,[...key].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,11)+(Date.now()%997));
   P.ctx.clearRect(0,0,cv.width,cv.height);P.ctx.save();P.ctx.globalAlpha=alpha||.16;try{d.f(P);}catch(e){}P.ctx.restore();INK=old;}
 
-return {el,render,SC,BG,renderBg};
+// ---- свиток пути: ветка тушью через кружки (белым по чёрному) ----
+function renderPath(cv,key,pts,alpha){const old=INK;INK='240,236,228';
+  const P=painter(cv,[...key].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,5)+(Date.now()%991));const R=P.H/P.W;
+  P.ctx.clearRect(0,0,cv.width,cv.height);P.ctx.save();P.ctx.globalAlpha=alpha||.24;
+  const leaf=(x,y,a,l,w)=>P.stroke([[x,y],[x+Math.cos(a)*l*.5,y+Math.sin(a)*l*.5/R],[x+Math.cos(a)*l,y+Math.sin(a)*l/R]],w||.03,{a:.85,taper:[.25,1,.02],dry:.15});
+  const flower=(x,y,r)=>{P.stroke(P.ell(x,y,r,r,0,6.3,18),.004,{a:.8,dry:.2,taper:[.6,1,.6]});P.blot(x,y,.006,.9);};
+  try{
+  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];const side=(b[0]>=a[0]?-1:1)*(i%2?1:.8);
+    const mid=[(a[0]+b[0])/2+side*.2,(a[1]+b[1])/2];const seg=[a,mid,b];const sx=mid[0]+side*.1;
+    if(key==='bamboo'){P.stroke(seg,.032,{a:.85,taper:[.9,.8,.9],dry:.3});P.stroke([[mid[0]-.035,mid[1]],[mid[0]+.035,mid[1]]],.01,{a:.9});
+      for(let k=0;k<3;k++)leaf(mid[0],mid[1],(side>0?0:Math.PI)+P.rr(-.7,.5),P.rr(.16,.26));}
+    else if(key==='plum'){P.stroke(seg,.038,{a:.85,taper:[1,.7,.9],dry:.7});
+      const tw=[[mid[0],mid[1]],[sx,mid[1]-.04/R*.4],[sx+side*.08,mid[1]-.08/R*.4]];P.stroke(tw,.012,{a:.8,dry:.5,taper:[1,.6,.2]});
+      [[sx,mid[1]-.04/R*.4],[sx+side*.08,mid[1]-.08/R*.4],[mid[0]+side*.03,mid[1]+.05/R*.4]].forEach(([x,y])=>flower(x,y,P.rr(.022,.03)));}
+    else if(key==='orchid'){P.stroke(seg,.012,{a:.85,taper:[.4,1,.4],dry:.15});
+      P.stroke([mid,[sx,mid[1]-.12/R],[sx+side*.12,mid[1]-.06/R]],.012,{a:.8,taper:[.8,1,.02]});
+      for(let k=0;k<4;k++){const ang=-1.57+(k-1.5)*.7;P.stroke([[sx,mid[1]+.04/R],[sx+Math.cos(ang)*.045,mid[1]+.04/R+Math.sin(ang)*.03/R]],.012,{a:.8,taper:[.3,1,.15]});}}
+    else if(key==='chrys'){P.stroke(seg,.009,{a:.8,dry:.2});leaf(mid[0],mid[1],side>0?-.3:Math.PI+.3,.12,.04);
+      const fx=sx,fy=mid[1]-.03/R;for(let k=0;k<22;k++){const ang=k/22*6.283,l=P.rr(.04,.07);P.stroke([[fx+Math.cos(ang)*l*.25,fy+Math.sin(ang)*l*.25/R],[fx+Math.cos(ang)*l,fy+Math.sin(ang)*l/R]],.008,{a:.7,taper:[.3,1,.5]});}
+      P.stroke([[mid[0],mid[1]],[fx,fy]],.005,{a:.7});}
+    else if(key==='pine'){P.stroke(seg,.045,{a:.85,taper:[1,.8,1],dry:.8});
+      [[mid[0],mid[1]],[sx,mid[1]-.03/R]].forEach(([x,y])=>{for(let k=0;k<16;k++){const ang=-3.14+k/15*3.14;P.stroke([[x,y],[x+Math.cos(ang)*.07,y+Math.sin(ang)*.035/R]],.003,{a:.7,dry:0});}});}
+    else {P.stroke(seg,.007,{a:.8,dry:.2});const px=sx,py=mid[1];
+      P.wash(P.ell(px,py,.12,.04,0,6.3,30),.28,.006,'240,236,228');P.stroke(P.ell(px,py,.12,.04,.2,6.1,30),.004,{a:.6,dry:.4});
+      P.stroke([[mid[0],mid[1]],[px,py]],.005,{a:.6});
+      if(i%2===0)for(let k=-2;k<=2;k++){const ang=-1.57+k*.38;P.stroke([[px,py-.06/R],[px+Math.cos(ang)*.07,py-.06/R+Math.sin(ang)*.07/R]],.03-Math.abs(k)*.004,{a:.55,taper:[.3,1,.05],dry:.2});}}
+  }}catch(e){}
+  P.ctx.restore();INK=old;}
+
+return {el,render,SC,BG,renderBg,renderPath};
 })();
 
 
@@ -1451,7 +1490,20 @@ const BGKEY=(()=>{const keys=Object.keys(SUMI.BG);let last=null;try{last=localSt
   const pool=keys.filter(k=>k!==last);const k=pool[Math.floor(Math.random()*pool.length)];try{localStorage.setItem('kh-bg',k);}catch(e){}return k;})();
 function paintBg(){const cv=document.getElementById('bgart');if(!cv)return;const d=Math.min(2,window.devicePixelRatio||1);
   cv.width=Math.round(innerWidth*d);cv.height=Math.round(innerHeight*d);SUMI.renderBg(cv,BGKEY,.2);}
-paintBg();let bgT=null;addEventListener('resize',()=>{clearTimeout(bgT);bgT=setTimeout(paintBg,250);});
+function decorate(){const v=$('#view');if(!v)return;v.querySelectorAll('.scrollart').forEach(e=>e.remove());
+  if(tab==='path'){const path=v.querySelector('.path');if(!path)return;
+    const W=path.clientWidth,H=path.scrollHeight;const k=Math.min(2,window.devicePixelRatio||1,Math.sqrt(1.2e7/(W*H)));
+    const cv=h('canvas',{class:'scrollart pathart','aria-hidden':'true'});cv.width=Math.round(W*k);cv.height=Math.round(H*k);cv.style.width=W+'px';cv.style.height=H+'px';
+    path.prepend(cv);const pr=path.getBoundingClientRect();
+    const pts=[...path.querySelectorAll('.node')].map(n=>{const r=n.getBoundingClientRect();return [(r.left+r.width/2-pr.left)/W,(r.top+r.height/2-pr.top)/H];});
+    if(pts.length>1) SUMI.renderPath(cv,BGKEY,pts,.26);
+  } else {const H=v.scrollHeight,th=Math.round(innerHeight*1.1),n=Math.min(14,Math.ceil(H/th));
+    const wrap=h('div',{class:'scrollart','aria-hidden':'true',style:'height:'+H+'px'});v.prepend(wrap);
+    const io='IntersectionObserver' in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting&&!e.target.dataset.done){e.target.dataset.done=1;SUMI.renderBg(e.target,BGKEY,.17);io.unobserve(e.target);}}),{root:v,rootMargin:'400px'}):null;
+    for(let i=0;i<n;i++){const k=Math.min(1.5,window.devicePixelRatio||1);const c=h('canvas',{style:`top:${i*th}px;height:${th}px;`+(i%2?'transform:scaleX(-1)':'')});
+      c.width=Math.round(v.clientWidth*k);c.height=Math.round(th*k);wrap.append(c);if(io)io.observe(c);else SUMI.renderBg(c,BGKEY,.17);}}
+}
+let decoT=null;addEventListener('resize',()=>{clearTimeout(decoT);decoT=setTimeout(decorate,250);});
 // ---------- tabs ----------
 let tab='path';
 ['path','poems','kanji'].forEach(t=>$('#tab-'+t).addEventListener('click',()=>{tab=t;render();}));
@@ -1460,6 +1512,7 @@ function render(){
   const v=$('#view'); v.innerHTML=''; v.scrollTop=0;
   v.append(topBar());
   if(tab==='path') v.append(viewPath()); else if(tab==='poems') v.append(viewPoems()); else v.append(viewKanji());
+  requestAnimationFrame(()=>requestAnimationFrame(decorate));
 }
 function topBar(){
   return h('div',{class:'top'},
@@ -1488,7 +1541,7 @@ function viewPath(){
       u.node, cur?h('span',{class:'cur-ring'}):null,
       done?h('span',{class:'seal'},u.node):null,
       !open?h('span',{class:'lock',html:ico.lock}):null);
-    if(i) p.append(h('div',{class:'dash',style:`transform:translateX(${(offs[i%8]+offs[(i-1)%8])/2}px)`}));
+    if(i) p.append(h('div',{class:'dash gap'}));
     p.append(h('div',{class:'ustep',style:`transform:translateX(${offs[i%8]}px)`},node,
       h('div',{class:'ulabel'},h('b',null,u.author?u.author+' · '+u.title:u.title), u.lines?h('span',{class:'jp'},u.lines[0]):(u.kind==='review'?'10 знаков из 5 уроков':u.sub))));
   });
