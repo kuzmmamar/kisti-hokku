@@ -1599,7 +1599,7 @@ function startLesson(u){
   const its=u.items.map(g=>M[g]); const q=[];
   const fresh=its.some(it=>!known(it.g));
   q.push({t:'phase',kind:'learn',u,n:its.length,skip:!fresh});
-  its.forEach((it,i)=>{q.push({t:'learn',it,i:i+1,n:its.length});q.push({t:'trace',it,mode:'guide'});q.push({t:'trace',it,mode:'fade'});});
+  its.forEach((it,i)=>{q.push({t:'learn',it,i:i+1,n:its.length});q.push({t:'trace',it,mode:'guide'});q.push({t:'trace',it,mode:'blank'});});
   q.push({t:'phase',kind:'test',u,n:its.length});
   q.push(...testBlock(its));
   runSession(q,{unit:u});
@@ -1737,7 +1737,7 @@ function exPhase(ex){
     h('span',{class:'learn-tag'},'Часть 1 · Обучение'),
     h('h2',null,u&&u.lines?u.author+' · '+u.title:(u?u.title:'Обучение')),
     u&&u.lines?h('div',{class:'poemline',lang:'ja'},u.lines.join(' ')):null,
-    h('p',{class:'tinfo',style:'text-align:left'},'Для каждого из '+ex.n+' '+plural(ex.n,'знака','знаков','знаков')+' — три шага: разберите карточку (смысл, части, порядок черт), обведите по образцу, затем напишите по бледному образцу. Проверка по памяти будет после всех знаков — так память закрепляется лучше.'),
+    h('p',{class:'tinfo',style:'text-align:left'},'Для каждого из '+ex.n+' '+plural(ex.n,'знака','знаков','знаков')+' — три шага: разберите карточку (смысл, части, порядок черт), обведите по образцу, затем напишите сами на чистом листе. Проверка по памяти будет после всех знаков — так память закрепляется лучше.'),
     ex.skip?h('p',{class:'tinfo',style:'text-align:left'},'Эти знаки вы уже проходили — можно сразу перейти к проверке.'):null)};
   return {learn:true,btnText:'Начать проверку',node:h('div',{class:'phase'},
     h('span',{class:'learn-tag'},ex.review?'Повторение':'Часть 2 · Проверка'),
@@ -1884,7 +1884,7 @@ function dilate(m,N,r){const o=new Uint8Array(N*N);for(let y=0;y<N;y++)for(let x
   for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<N&&Y<N)o[Y*N+X]=1;}}return o;}
 function exTrace(it,onReady,free,mode){
   if(mode===true) mode='memory'; mode=mode||'guide';
-  const memory=mode==='memory', fade=mode==='fade', strict=memory||fade;
+  const blank=mode==='blank', memory=mode==='memory'||blank, fade=mode==='fade', strict=memory||fade;
   const D=STK[it.g]; const n=D?D.d.length:it.s;
   const size=Math.max(200,Math.min(300,window.innerWidth-48));
   const DPR=Math.min(2,window.devicePixelRatio||1), W=Math.round(size*DPR);
@@ -1955,7 +1955,7 @@ function exTrace(it,onReady,free,mode){
   const pl=memory?null:orderPlayer(it.g);
   const demo=memory?null:h('details',{class:'demo',open:mode==='guide'&&!free?true:null},h('summary',null,'Порядок черт'),pl.node);
   const tag=mode==='guide'?'Шаг 2 из 3 · обведите':fade?'Шаг 3 из 3 · бледный образец':'По памяти';
-  const head=memory?[h('div',{class:'q'},'Нарисуйте по памяти: «',it.m,'»'),
+  const head=memory?[blank?h('span',{class:'learn-tag'},'Шаг 3 из 3 · чистый лист'):null,h('div',{class:'q'},blank?'Теперь сами, на чистом листе: «'+it.m+'»':'Нарисуйте по памяти: «'+it.m+'»'),
       h('div',{class:'drawhint'},PIC[it.g]?h('span',{class:'dpic'},picImg(it.g)):null,h('span',null,(it.kun||it.on||'').split('・')[0],' · ',n,' ',plural(n,'черта','черты','черт')))]
     :[free?null:h('span',{class:'learn-tag'},tag),h('div',{class:'q'},fade?'Напишите «'+it.m+'» по бледному образцу':'Обведите «'+it.m+'» по порядку черт')];
   const tip=memory?'Неверная черта сразу стирается, и показывается правильная. После двух промахов черта остаётся бледной.'
