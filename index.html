@@ -312,7 +312,7 @@ h1,h2,h3{text-wrap:balance;margin:0}
 
 /* hearts */
 .hearts{display:flex;gap:3px;align-items:center}
-.ht{position:relative;width:22px;height:20px;display:inline-block}
+.ht{position:relative;width:18px;height:17px;display:inline-block}
 .ht svg{width:100%;height:100%;fill:var(--shu);transition:fill .3s,opacity .3s,transform .3s}
 .ht.gone svg{fill:var(--line);opacity:.8;transform:scale(.85)}
 .ht .fl{position:absolute;left:50%;bottom:30%;width:14px;height:20px;margin-left:-7px;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;
@@ -321,7 +321,7 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .ht.burn .fl{animation:hflame .75s ease-out forwards}
 @keyframes hburn{0%{transform:scale(1)}25%{transform:scale(1.35);fill:#ff8a1f}60%{fill:#7a2a1a}100%{transform:scale(.85);fill:var(--line)}}
 @keyframes hflame{0%{opacity:0;transform:translateY(4px) scale(.6)}30%{opacity:1;transform:translateY(-4px) scale(1.15)}100%{opacity:0;transform:translateY(-18px) scale(.5)}}
-.hearts.big{gap:10px}.hearts.big .ht{width:54px;height:48px}
+.hearts.big{gap:10px}.hearts.big .ht{width:44px;height:40px}
 
 /* chunks & voice */
 .comps{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:180px}
@@ -1465,7 +1465,7 @@ function openUnit(u){
   const body=h('div');
   const rev=u.kind==='review';
   body.append(SUMI.el(rev?'rad':u.id,u.node,'hero'),h('div',{class:'tag'},rev?'Повторение':u.author?(u.author+' · '+u.year):'Основы'), h('h2',{style:'margin:2px 0 12px'},u.title));
-  if(rev) body.append(h('p',{class:'how',style:'margin-top:0'},'10 случайных знаков из пяти прошлых уроков: '+u.src.map(id=>UNITS.find(x=>x.id===id).title).join(', ')+'. Каждый раз набор новый. Выбор из 4 и рисование по названию, три сердца.'));
+  if(rev) body.append(h('p',{class:'how',style:'margin-top:0'},'10 случайных знаков из пяти прошлых уроков: '+u.src.map(id=>UNITS.find(x=>x.id===id).title).join(', ')+'. Каждый раз набор новый. Выбор из 4 и рисование по названию, пять сердец.'));
   else if(u.lines) body.append(poemCard(u,false));
   else body.append(h('p',{class:'how',style:'margin-top:0'},'Ключи — повторяющиеся части знаков. Именно их каллиграф сокращает в первую очередь: они предсказуемы, и глаз узнаёт их по силуэту. Сохранять нужно то, что отличает знак от соседей.'));
   body.append(h('div',{class:'sec-h'},rev?'Знаки этих уроков':'Знаки урока'));
@@ -1631,10 +1631,10 @@ function startReview(){
 let keyHandler=null;
 function runSession(queue,meta){
   closeSheet();
-  const L={q:[...queue],done:0,res:{},right:0,wrong:0,combo:0,best:0,hearts:3,testing:false,dead:false,testSnap:null,learnSnap:null};
+  const L={q:[...queue],done:0,res:{},right:0,wrong:0,combo:0,best:0,hearts:5,testing:false,dead:false,testSnap:null,learnSnap:null};
   const fill=h('i'), combo=h('span',{class:'combo'});
   const HEART='<svg viewBox="0 0 24 22" aria-hidden="true"><path d="M12 21C5 15.5 1 11.8 1 7.2 1 3.8 3.6 1.2 6.9 1.2c2.1 0 3.9 1 5.1 2.7 1.2-1.7 3-2.7 5.1-2.7 3.3 0 5.9 2.6 5.9 6 0 4.6-4 8.3-11 13.8z"/></svg>';
-  const hearts=h('div',{class:'hearts',role:'status','aria-label':'Сердца'},[0,1,2].map(()=>h('span',{class:'ht',html:HEART+'<i class="fl"></i>'})));
+  const hearts=h('div',{class:'hearts',role:'status','aria-label':'Сердца'},[0,1,2,3,4].map(()=>h('span',{class:'ht',html:HEART+'<i class="fl"></i>'})));
   function drawHearts(){hearts.hidden=!L.testing;[...hearts.children].forEach((e,i)=>{e.classList.toggle('gone',i>=L.hearts);e.classList.remove('burn');});hearts.setAttribute('aria-label','Сердец: '+L.hearts);}
   function loseHeart(){if(!L.testing||L.hearts<=0)return;L.hearts--;const e=hearts.children[L.hearts];e.classList.add('burn');setTimeout(()=>{e.classList.add('gone');},750);hearts.setAttribute('aria-label','Сердец: '+L.hearts);if(L.hearts<=0)L.dead=true;}
   const body=h('div',{class:'lbody'}), foot=h('div',{class:'lfoot'});
@@ -1652,13 +1652,13 @@ function runSession(queue,meta){
   function exit(){document.removeEventListener('keydown',keyHandler);root.remove();render();}
   function upd(){fill.style.width=(100*L.done/(L.done+L.q.length))+'%'; combo.textContent=L.combo>=3?L.combo+' подряд':'';}
   function next(){upd(); if(L.dead) return failScreen(); if(!L.q.length) return finish(); show(L.q.shift());}
-  function restart(fromLearn){L.q=[...(fromLearn&&L.learnSnap?L.learnSnap:L.testSnap)];L.done=0;L.res={};L.right=0;L.wrong=0;L.combo=0;L.dead=false;L.hearts=3;L.testing=false;drawHearts();next();}
+  function restart(fromLearn){L.q=[...(fromLearn&&L.learnSnap?L.learnSnap:L.testSnap)];L.done=0;L.res={};L.right=0;L.wrong=0;L.combo=0;L.dead=false;L.hearts=5;L.testing=false;drawHearts();next();}
   function failScreen(){
     body.innerHTML='';foot.innerHTML='';foot.className='lfoot';
     body.append(h('div',{class:'end'},
-      h('div',{class:'hearts big'},[0,1,2].map(()=>h('span',{class:'ht gone',html:HEART}))),
+      h('div',{class:'hearts big'},[0,1,2,3,4].map(()=>h('span',{class:'ht gone',html:HEART}))),
       h('h2',null,'Сердца сгорели'),
-      h('p',{class:'tinfo'},'Три ошибки — проверка начинается заново. Если знаки ещё путаются, сначала пролистайте карточки обучения.')));
+      h('p',{class:'tinfo'},'Пять ошибок — проверка начинается заново. Если знаки ещё путаются, сначала пролистайте карточки обучения.')));
     const again=h('button',{class:'btn primary big main',onclick:()=>restart(false)},'Начать проверку заново');
     foot.append(L.learnSnap?h('div',{class:'row',style:'flex-wrap:nowrap'},h('button',{class:'btn ghost',onclick:()=>restart(true)},'Повторить обучение'),again):again);
     again.focus();
@@ -1667,7 +1667,7 @@ function runSession(queue,meta){
     body.innerHTML=''; foot.innerHTML=''; foot.className='lfoot'; body.scrollTop=0;
     let btn;
     if(ex.t==='phase'&&ex.kind==='learn'){L.learnSnap=[ex,...L.q];L.testing=false;drawHearts();}
-    if(ex.t==='phase'&&ex.kind==='test'){L.testSnap=[ex,...L.q];L.testing=true;L.hearts=3;L.dead=false;drawHearts();}
+    if(ex.t==='phase'&&ex.kind==='test'){L.testSnap=[ex,...L.q];L.testing=true;L.hearts=5;L.dead=false;drawHearts();}
     const E=build(ex,()=>{btn.disabled=!E.ready();});
     body.append(E.node);
     if(E.learn){ btn=h('button',{class:'btn primary big main',onclick:()=>{L.done++;next();}},E.btnText||'Понятно');
@@ -1720,7 +1720,7 @@ function runSession(queue,meta){
         h('div',{class:'stat'},h('b',null,acc+'%'),h('small',null,'точность')),
         h('div',{class:'stat'},h('b',null,S.streak),h('small',null,plural(S.streak,'день','дня','дней')+' подряд'))),
       glyphs?h('div',{class:'kl',lang:'ja'},glyphs):null,
-      meta.free?null:h('div',{class:'refill'},h('div',{class:'hearts'},[0,1,2].map(()=>h('span',{class:'ht',html:HEART}))),h('span',null,'Сердца восстановлены: в следующем уроке снова три.')),
+      meta.free?null:h('div',{class:'refill'},h('div',{class:'hearts'},[0,1,2,3,4].map(()=>h('span',{class:'ht',html:HEART}))),h('span',null,'Сердца восстановлены: в следующем уроке снова пять.')),
       L.wrong?h('p',{class:'tinfo'},'Ошибки не страшны: эти знаки вернутся в повторении через 10 минут.'):h('p',{class:'tinfo'},'Следующее повторение — завтра.')));
     foot.append(h('button',{class:'btn primary big main',onclick:exit},'Продолжить'));
     document.addEventListener('keydown',keyHandler=e=>{if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();exit();}});
