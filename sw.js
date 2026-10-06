@@ -1,5 +1,5 @@
 // Кисть и хокку — офлайн-кэш. Меняйте VERSION при каждом обновлении файлов.
-const VERSION='kisti-v15';
+const VERSION='kisti-v16';
 const FILES=["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "Golos.woff", "KleeOne-400.woff", "KleeOne-600.woff", "Shippori-500.woff", "Shippori-700.woff", "YujiSyuku.woff"];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
