@@ -9,4 +9,5 @@
 
 Порядок черт — [KanjiVG](https://kanjivg.tagaini.net/) © Ulrich Apel, CC BY-SA 3.0.
 Иллюстрации — [Twemoji](https://github.com/jdecked/twemoji), CC BY 4.0.
+Почерки (楷書, 行書, 行草, 草書) — шрифты Yuji Syuku, Yuji Boku, Ma Shan Zheng, Long Cang, Zhi Mang Xing, Liu Jian Mao Cao (SIL OFL).
 Шрифты Golos Text, Klee One, Shippori Mincho, Yuji Syuku — SIL Open Font License.
