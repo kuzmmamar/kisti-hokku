@@ -1397,34 +1397,64 @@ function renderBg(cv,key,alpha){const d=BG[key]||BG.bamboo;const old=INK;INK='24
   const P=painter(cv,[...key].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,11)+(Date.now()%997));
   P.ctx.clearRect(0,0,cv.width,cv.height);P.ctx.save();P.ctx.globalAlpha=alpha||.16;try{d.f(P);}catch(e){}P.ctx.restore();INK=old;}
 
-// ---- свиток пути: ветка тушью через кружки (белым по чёрному) ----
+// ---- свиток пути: плавная трава тушью сквозь кружки (белым по чёрному) ----
 function renderPath(cv,key,pts,alpha){const old=INK;INK='240,236,228';
-  const P=painter(cv,[...key].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,5)+(Date.now()%991));const R=P.H/P.W;
-  P.ctx.clearRect(0,0,cv.width,cv.height);P.ctx.save();P.ctx.globalAlpha=alpha||.24;
-  const leaf=(x,y,a,l,w)=>P.stroke([[x,y],[x+Math.cos(a)*l*.5,y+Math.sin(a)*l*.5/R],[x+Math.cos(a)*l,y+Math.sin(a)*l/R]],w||.03,{a:.85,taper:[.25,1,.02],dry:.15});
-  const flower=(x,y,r)=>{P.stroke(P.ell(x,y,r,r,0,6.3,18),.004,{a:.8,dry:.2,taper:[.6,1,.6]});P.blot(x,y,.006,.9);};
-  try{
-  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];const side=(b[0]>=a[0]?-1:1)*(i%2?1:.8);
-    const mid=[(a[0]+b[0])/2+side*.2,(a[1]+b[1])/2];const seg=[a,mid,b];const sx=mid[0]+side*.1;
-    if(key==='bamboo'){P.stroke(seg,.032,{a:.85,taper:[.9,.8,.9],dry:.3});P.stroke([[mid[0]-.035,mid[1]],[mid[0]+.035,mid[1]]],.01,{a:.9});
-      for(let k=0;k<3;k++)leaf(mid[0],mid[1],(side>0?0:Math.PI)+P.rr(-.7,.5),P.rr(.16,.26));}
-    else if(key==='plum'){P.stroke(seg,.038,{a:.85,taper:[1,.7,.9],dry:.7});
-      const tw=[[mid[0],mid[1]],[sx,mid[1]-.04/R*.4],[sx+side*.08,mid[1]-.08/R*.4]];P.stroke(tw,.012,{a:.8,dry:.5,taper:[1,.6,.2]});
-      [[sx,mid[1]-.04/R*.4],[sx+side*.08,mid[1]-.08/R*.4],[mid[0]+side*.03,mid[1]+.05/R*.4]].forEach(([x,y])=>flower(x,y,P.rr(.022,.03)));}
-    else if(key==='orchid'){P.stroke(seg,.012,{a:.85,taper:[.4,1,.4],dry:.15});
-      P.stroke([mid,[sx,mid[1]-.12/R],[sx+side*.12,mid[1]-.06/R]],.012,{a:.8,taper:[.8,1,.02]});
-      for(let k=0;k<4;k++){const ang=-1.57+(k-1.5)*.7;P.stroke([[sx,mid[1]+.04/R],[sx+Math.cos(ang)*.045,mid[1]+.04/R+Math.sin(ang)*.03/R]],.012,{a:.8,taper:[.3,1,.15]});}}
-    else if(key==='chrys'){P.stroke(seg,.009,{a:.8,dry:.2});leaf(mid[0],mid[1],side>0?-.3:Math.PI+.3,.12,.04);
-      const fx=sx,fy=mid[1]-.03/R;for(let k=0;k<22;k++){const ang=k/22*6.283,l=P.rr(.04,.07);P.stroke([[fx+Math.cos(ang)*l*.25,fy+Math.sin(ang)*l*.25/R],[fx+Math.cos(ang)*l,fy+Math.sin(ang)*l/R]],.008,{a:.7,taper:[.3,1,.5]});}
-      P.stroke([[mid[0],mid[1]],[fx,fy]],.005,{a:.7});}
-    else if(key==='pine'){P.stroke(seg,.045,{a:.85,taper:[1,.8,1],dry:.8});
-      [[mid[0],mid[1]],[sx,mid[1]-.03/R]].forEach(([x,y])=>{for(let k=0;k<16;k++){const ang=-3.14+k/15*3.14;P.stroke([[x,y],[x+Math.cos(ang)*.07,y+Math.sin(ang)*.035/R]],.003,{a:.7,dry:0});}});}
-    else {P.stroke(seg,.007,{a:.8,dry:.2});const px=sx,py=mid[1];
-      P.wash(P.ell(px,py,.12,.04,0,6.3,30),.28,.006,'240,236,228');P.stroke(P.ell(px,py,.12,.04,.2,6.1,30),.004,{a:.6,dry:.4});
-      P.stroke([[mid[0],mid[1]],[px,py]],.005,{a:.6});
-      if(i%2===0)for(let k=-2;k<=2;k++){const ang=-1.57+k*.38;P.stroke([[px,py-.06/R],[px+Math.cos(ang)*.07,py-.06/R+Math.sin(ang)*.07/R]],.03-Math.abs(k)*.004,{a:.55,taper:[.3,1,.05],dry:.2});}}
-  }}catch(e){}
-  P.ctx.restore();INK=old;}
+  const P=painter(cv,[...key].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,5)+(Date.now()%991));
+  const ctx=P.ctx,W=P.W,H=P.H;P.ctx.clearRect(0,0,W,H);ctx.save();ctx.globalAlpha=alpha||.26;
+  const rnd=P.rnd,rr=P.rr;
+  // точки в пикселях и сглаженный сплайн через все кружки
+  const U=W/390;const nodes=pts.map(([x,y])=>[x*W,y*H]);const px=[];
+  nodes.forEach((p,i)=>{px.push(p);const q=nodes[i+1];if(!q)return;const sw=(i%2?1:-1)*rr(38,58)*U;
+    px.push([p[0]*.72+q[0]*.28+sw,p[1]*.72+q[1]*.28]);px.push([p[0]*.28+q[0]*.72-sw*.8,p[1]*.28+q[1]*.72]);});
+  const spline=[];for(let i=0;i<px.length-1;i++){const p0=px[i-1]||px[i],p1=px[i],p2=px[i+1],p3=px[i+2]||p2;
+    const n=Math.max(8,Math.ceil(Math.hypot(p2[0]-p1[0],p2[1]-p1[1])/4));
+    for(let k=0;k<n;k++){const t=k/n,t2=t*t,t3=t2*t;spline.push([
+      .5*(2*p1[0]+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+      .5*(2*p1[1]+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)]);}}
+  spline.push(px[px.length-1]);
+  const N=spline.length;const tan=i=>{const a=spline[Math.max(0,i-2)],b=spline[Math.min(N-1,i+2)];const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return [dx/l,dy/l];};
+  // мягкий мазок: переменная ширина, сухой край
+  function blade(path,w0,w1,a,dry){if(path.length<2)return;const n=path.length;const nor=[];
+    for(let i=0;i<n;i++){const p=path[Math.max(0,i-1)],q=path[Math.min(n-1,i+1)];const dx=q[0]-p[0],dy=q[1]-p[1],l=Math.hypot(dx,dy)||1;nor.push([-dy/l,dx/l]);}
+    const wd=t=>{const sw=Math.sin(Math.min(1,t*1.15)*Math.PI*.5);return (w0+(w1-w0)*t)*(t<.12?t/.12:1)*(1-Math.pow(t,3)*.92)*(.85+.15*sw);};
+    ctx.fillStyle=`rgba(${INK},${a*.7})`;ctx.beginPath();
+    for(let i=0;i<n;i++){const t=i/(n-1),w=wd(t);ctx.lineTo(path[i][0]+nor[i][0]*w,path[i][1]+nor[i][1]*w);}
+    for(let i=n-1;i>=0;i--){const t=i/(n-1),w=wd(t);ctx.lineTo(path[i][0]-nor[i][0]*w,path[i][1]-nor[i][1]*w);}
+    ctx.closePath();ctx.fill();
+    const B=Math.max(3,Math.min(9,Math.round(w0/1.2)));ctx.lineCap='round';
+    for(let bI=0;bI<B;bI++){const off=B>1?(bI/(B-1))*2-1:0;ctx.strokeStyle=`rgba(${INK},${a*rr(.25,.55)})`;ctx.lineWidth=Math.max(.6,w0*2/B);ctx.beginPath();let pen=false;
+      for(let i=0;i<n;i++){const t=i/(n-1);if(t>1-dry*rr(.3,1)&&Math.abs(off)>.3&&rnd()<.4){pen=false;continue;}
+        const w=wd(t)*.9,x=path[i][0]+nor[i][0]*w*off,y=path[i][1]+nor[i][1]*w*off;if(!pen){ctx.moveTo(x,y);pen=true;}else ctx.lineTo(x,y);}ctx.stroke();}}
+  // одна травинка: растёт из точки, изгибается и клонится по ветру
+  function grass(x,y,ang,len,w,bend,a){const path=[];const steps=26;let cx=x,cy=y,ca=ang;
+    for(let i=0;i<=steps;i++){path.push([cx,cy]);const t=i/steps;ca+=bend*(.4+t*1.6)/steps;cx+=Math.cos(ca)*len/steps;cy+=Math.sin(ca)*len/steps;}
+    blade(path,w,w*.25,a,.4);return path[path.length-1];}
+  // 1) главная линия: длинный стебель, плавно идущий через все кружки
+  const main=spline.filter((_,i)=>i%2===0);
+  const segL=180;for(let s0=0;s0<main.length-1;s0+=segL-12){const seg=main.slice(s0,Math.min(main.length,s0+segL));blade(seg,3.2*U,2.2*U,.85,.15);}
+  const wind=key==='pine'?-.2:.55; // общий наклон ветра
+  // 2) трава вдоль линии
+  let acc=0;for(let i=6;i<N-6;i++){const d=Math.hypot(spline[i][0]-spline[i-1][0],spline[i][1]-spline[i-1][1]);acc+=d;
+    if(acc<rr(24,44)*U)continue;acc=0;
+    const ang=-Math.PI/2+rr(-.55,.15);const len=rr(60,150)*U;
+    grass(spline[i][0],spline[i][1],ang,len,rr(1.2,2.8)*U,rr(.7,1.5),rr(.4,.75));
+    if(rnd()<.35)grass(spline[i][0],spline[i][1],ang-rr(.2,.5),len*rr(.5,.8),rr(1,2)*U,rr(.9,1.8),rr(.35,.6));}
+  // 3) пучки у каждого кружка и растение дня между ними
+  for(let i=0;i<px.length;i++){const [x,y]=px[i];const R=46*U;
+    for(let k=0;k<5;k++){const ang=-Math.PI/2+rr(-.7,.3);grass(x+rr(-R*.6,R*.6),y+R*.8,ang,rr(60,120)*U,rr(1.4,2.6)*U,rr(.6,1.4),rr(.45,.75));}
+    if(i===px.length-1)break;
+    const [qx,qy]=px[i+1],mx=(x+qx)/2,my=(y+qy)/2,side=qx>=x?-1:1,fx=mx+side*rr(60,95)*U,fy=my;
+    if(key==='bamboo'){for(let k=0;k<3;k++){const ang=(side>0?.25:Math.PI-.25)+rr(-.35,.35);grass(fx,fy,ang,rr(60,90)*U,rr(3.2,4.4)*U,(side>0?1:-1)*rr(.3,.7),.6);} P.blot(fx/W,fy/H,.005,.8);}
+    else if(key==='plum'||key==='chrys'||key==='lotus'){const top=grass(mx,my,-Math.PI/2+side*.6,rr(60,90)*U,2.2*U,side*.6,.75);
+      const r=(key==='lotus'?16:key==='chrys'?14:10)*U;
+      if(key==='chrys'){for(let k=0;k<22;k++){const a2=k/22*6.283;blade([[top[0]+Math.cos(a2)*r*.25,top[1]+Math.sin(a2)*r*.25],[top[0]+Math.cos(a2)*r*.7,top[1]+Math.sin(a2)*r*.7],[top[0]+Math.cos(a2)*r,top[1]+Math.sin(a2)*r]],1.6*U,.8*U,.75,.2);}}
+      else if(key==='lotus'){for(let k=-2;k<=2;k++){const a2=-Math.PI/2+k*.42;grass(top[0],top[1]+r*.3,a2,r*1.6,(6-Math.abs(k))*U,0,.6);}}
+      else {for(let k=0;k<5;k++){const a2=k*1.2566;ctx.strokeStyle=`rgba(${INK},.8)`;ctx.lineWidth=1.2*U;ctx.beginPath();ctx.arc(top[0]+Math.cos(a2)*r*.55,top[1]+Math.sin(a2)*r*.55,r*.5,0,7);ctx.stroke();}P.blot(top[0]/W,top[1]/H,.006,.9);}}
+    else if(key==='orchid'){for(let k=0;k<3;k++){const top=grass(mx,my,-Math.PI/2+side*rr(.2,.8),rr(70,120)*U,2.4*U,side*rr(.6,1.2),.8);}
+      for(let k=0;k<5;k++){const a2=-Math.PI/2+(k-2)*.7;grass(fx,fy,a2,12*U,3*U,0,.8);}}
+    else if(key==='pine'){for(let c2=0;c2<2;c2++){const cx2=fx+c2*side*30*U,cy2=fy-c2*20*U;for(let k=0;k<18;k++){const a2=-Math.PI+k/17*Math.PI;grass(cx2,cy2,a2,26*U,.9*U,0,.75);}}}
+  }
+  ctx.restore();INK=old;}
 
 return {el,render,SC,BG,renderBg,renderPath};
 })();
