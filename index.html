@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Кисть и хокку</title>
+<title>発句</title>
 <meta name="description" content="Иероглифы, порядок черт и каллиграфия на хокку Басё и его последователей">
 <meta name="theme-color" content="#EDEFEA" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#141619" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Кисть и хокку">
+<meta name="apple-mobile-web-app-title" content="発句">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -296,6 +296,8 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .endart .bigseal{position:absolute;right:-8px;bottom:-14px;width:76px;height:76px;font-size:46px}
 .pimg{background:#f4efe3;border-radius:50%;padding:12%;box-sizing:border-box}
 .pimg img{filter:saturate(.7) sepia(.12) contrast(1.05)}
+.brand b.hk{font:34px/1 KHKai,KHKaiB,var(--f-brush);color:var(--shu);letter-spacing:.04em}
+.brand span{font:13px var(--f-ui);color:var(--ink2)}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -1363,7 +1365,7 @@ function render(){
 }
 function topBar(){
   return h('div',{class:'top'},
-    h('div',{class:'brand'},h('b',null,'Кисть и хокку'),h('span',null,'筆と俳句')),
+    h('div',{class:'brand'},h('b',{class:'hk',lang:'ja'},'発句'),h('span',null,'хокку · кисть и тушь')),
     h('span',{class:'chip',title:'Дней подряд',html:ico.flame+' '+S.streak}),
     h('span',{class:'chip',title:'Очки опыта',html:ico.brush+' '+S.xp}));
 }
