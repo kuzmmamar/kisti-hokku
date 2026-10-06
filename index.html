@@ -329,6 +329,9 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .cchip b{font:600 14px var(--f-kan)}
 .pbtn.voice{width:auto;padding:0 6px;font:12px var(--f-kan);color:var(--ink2)}
 .pbtn.voice.on{color:var(--on-ai);background:var(--ai);border-color:var(--ai-deep)}
+.node.rev{border-radius:24px;font-family:KHKai,KHKaiB,var(--f-brush);font-weight:400}
+.node.rev .cur-ring{border-radius:30px}
+.node.rev.open,.node.rev:not(.cur):not(.done){box-shadow:0 5px 0 var(--line),inset 0 0 0 3px var(--shu)}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -1344,7 +1347,14 @@ return {el,render,SC};
 'use strict';
 const ALL=[...RAD.map(x=>({...x,t:'rad'})),...KJ.map(x=>({...x,t:'kan'}))];
 const M={}; ALL.forEach(it=>M[it.g]=it);
-UNITS.forEach((u,i)=>{u.idx=i; if(u.lines) u.jp=u.lines.join(''); u.items.forEach(g=>{M[g].unit=u;});});
+(function(){ // повторение после каждых 5 уроков
+  const out=[];let batch=[],k=0;
+  UNITS.forEach(u=>{out.push(u);batch.push(u);
+    if(batch.length===5){k++;const src=batch;batch=[];
+      out.push({id:'rev'+k,kind:'review',node:'復',title:'Повторение '+k,src:src.map(x=>x.id),
+        sub:'10 знаков из '+src.map(x=>x.title).join(', '),items:[...new Set(src.flatMap(x=>x.items))]});}});
+  UNITS.length=0;out.forEach(u=>UNITS.push(u));})();
+UNITS.forEach((u,i)=>{u.idx=i; if(u.lines) u.jp=u.lines.join(''); if(u.kind!=='review') u.items.forEach(g=>{M[g].unit=u;});});
 
 // ---------- state ----------
 const KEY='kisti-hokku-v1';
@@ -1417,13 +1427,13 @@ function viewPath(){
   UNITS.forEach((u,i)=>{
     const open=isUnlocked(u), done=!!S.done[u.id];
     const cur=open&&!done&&!curFound; if(cur) curFound=true;
-    const node=h('button',{class:'node '+(cur?'cur':done?'done':open?'open':''),'aria-label':(u.author?u.author+': ':'')+u.title+(open?'':' — закрыто'),onclick:()=>openUnit(u)},
+    const node=h('button',{class:'node '+(u.kind==='review'?'rev ':'')+(cur?'cur':done?'done':open?'open':''),'aria-label':(u.author?u.author+': ':'')+u.title+(open?'':' — закрыто'),onclick:()=>openUnit(u)},
       u.node, cur?h('span',{class:'cur-ring'}):null,
       done?h('span',{class:'seal'},u.node):null,
       !open?h('span',{class:'lock',html:ico.lock}):null);
     if(i) p.append(h('div',{class:'dash',style:`transform:translateX(${(offs[i%8]+offs[(i-1)%8])/2}px)`}));
     p.append(h('div',{class:'ustep',style:`transform:translateX(${offs[i%8]}px)`},node,
-      h('div',{class:'ulabel'},h('b',null,u.author?u.author+' · '+u.title:u.title), u.lines?h('span',{class:'jp'},u.lines[0]):u.sub)));
+      h('div',{class:'ulabel'},h('b',null,u.author?u.author+' · '+u.title:u.title), u.lines?h('span',{class:'jp'},u.lines[0]):(u.kind==='review'?'10 знаков из 5 уроков':u.sub))));
   });
   f.append(p);
   let armed=false;
@@ -1451,12 +1461,14 @@ function plural(n,a,b,c){n=Math.abs(n)%100;const n1=n%10;if(n>10&&n<20)return c;
 function openUnit(u){
   const open=isUnlocked(u);
   const body=h('div');
-  body.append(SUMI.el(u.id,u.node,'hero'),h('div',{class:'tag'},u.author?(u.author+' · '+u.year):'Основы'), h('h2',{style:'margin:2px 0 12px'},u.title));
-  if(u.lines) body.append(poemCard(u,false));
+  const rev=u.kind==='review';
+  body.append(SUMI.el(rev?'rad':u.id,u.node,'hero'),h('div',{class:'tag'},rev?'Повторение':u.author?(u.author+' · '+u.year):'Основы'), h('h2',{style:'margin:2px 0 12px'},u.title));
+  if(rev) body.append(h('p',{class:'how',style:'margin-top:0'},'10 случайных знаков из пяти прошлых уроков: '+u.src.map(id=>UNITS.find(x=>x.id===id).title).join(', ')+'. Каждый раз набор новый. Выбор из 4 и рисование по названию, три сердца.'));
+  else if(u.lines) body.append(poemCard(u,false));
   else body.append(h('p',{class:'how',style:'margin-top:0'},'Ключи — повторяющиеся части знаков. Именно их каллиграф сокращает в первую очередь: они предсказуемы, и глаз узнаёт их по силуэту. Сохранять нужно то, что отличает знак от соседей.'));
-  body.append(h('div',{class:'sec-h'},'Знаки урока'));
+  body.append(h('div',{class:'sec-h'},rev?'Знаки этих уроков':'Знаки урока'));
   body.append(h('div',{class:'kgrid'},u.items.map(g=>ktile(M[g]))));
-  body.append(open? h('button',{class:'btn primary big',onclick:()=>{closeSheet();startLesson(u);}},S.done[u.id]?'Пройти ещё раз':'Начать урок')
+  body.append(open? h('button',{class:'btn primary big',onclick:()=>{closeSheet();startLesson(u);}},rev?(S.done[u.id]?'Повторить ещё раз':'Начать повторение'):S.done[u.id]?'Пройти ещё раз':'Начать урок')
     : h('p',{class:'empty'},'Урок откроется после предыдущего. Или нажмите «Открыть все уроки» внизу пути.'));
   sheet(body);
 }
@@ -1501,7 +1513,7 @@ function viewKanji(){
     'Каждый знак проходит путь от кайсё (уставное письмо) к гёсё (полускоропись) и сосё (скоропись). ',
     h('b',{style:'color:var(--ai)'},'Сокращается'),' то, что повторяется и предсказуемо: ключи, точки, внутренние черты. ',
     h('b',{style:'color:var(--shu)'},'Не трогают'),' то, что отличает знак от похожего: число черт внутри рамки, длину горизонталей, точку, выход вертикали.'));
-  UNITS.forEach(u=>{
+  UNITS.filter(u=>u.kind!=='review').forEach(u=>{
     f.append(h('div',{class:'sec-h'},u.author?u.author+' · '+u.title:u.title));
     f.append(h('div',{class:'kgrid'},u.items.map(g=>ktile(M[g]))));
   });
@@ -1596,6 +1608,8 @@ function testBlock(its){
   for(let i=0;i<n;i++) if(n>1&&dr[i].it===mcs[i].it){const k=(i+1)%n;[dr[i],dr[k]]=[dr[k],dr[i]];}
   const q=[];for(let i=0;i<n;i++){q.push(mcs[i]);q.push(dr[i]);}return q;}
 function startLesson(u){
+  if(u.kind==='review'){const its=shuffle(u.items.map(g=>M[g])).slice(0,10);
+    return runSession([{t:'phase',kind:'test',u,n:its.length,review:true,rev:true},...testBlock(its)],{unit:u});}
   const its=u.items.map(g=>M[g]); const q=[];
   const fresh=its.some(it=>!known(it.g));
   q.push({t:'phase',kind:'learn',u,n:its.length,skip:!fresh});
@@ -1741,7 +1755,7 @@ function exPhase(ex){
     ex.skip?h('p',{class:'tinfo',style:'text-align:left'},'Эти знаки вы уже проходили — можно сразу перейти к проверке.'):null)};
   return {learn:true,btnText:'Начать проверку',node:h('div',{class:'phase'},
     h('span',{class:'learn-tag'},ex.review?'Повторение':'Часть 2 · Проверка'),
-    h('h2',null,'Проверка на запоминание'),
+    h('h2',null,ex.rev?u.title+': '+ex.n+' знаков из пяти уроков':'Проверка на запоминание'),
     h('div',{class:'ph2'},
       h('div',{class:'phc'},h('b',null,'Выбор из 4'),h('span',null,'знак → значение или значение → знак')),
       h('div',{class:'phc'},h('b',null,'Нарисовать по названию'),h('span',null,'пустой лист, только слово; проверяются форма и порядок черт'))),
