@@ -8,4 +8,5 @@
 На iPhone: открыть ссылку в Safari → «Поделиться» → «На экран „Домой“». После первого запуска работает без интернета.
 
 Порядок черт — [KanjiVG](https://kanjivg.tagaini.net/) © Ulrich Apel, CC BY-SA 3.0.
+Иллюстрации — [Twemoji](https://github.com/jdecked/twemoji), CC BY 4.0.
 Шрифты Golos Text, Klee One, Shippori Mincho, Yuji Syuku — SIL Open Font License.
