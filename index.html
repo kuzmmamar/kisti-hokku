@@ -332,6 +332,8 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .node.rev{border-radius:24px;font-family:KHKai,KHKaiB,var(--f-brush);font-weight:400}
 .node.rev .cur-ring{border-radius:30px}
 .node.rev.open,.node.rev:not(.cur):not(.done){box-shadow:0 5px 0 var(--line),inset 0 0 0 3px var(--shu)}
+.refill{display:flex;align-items:center;gap:10px;justify-content:center;font-size:13px;color:var(--ink2)}
+.refill .hearts{flex:none}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -1718,6 +1720,7 @@ function runSession(queue,meta){
         h('div',{class:'stat'},h('b',null,acc+'%'),h('small',null,'точность')),
         h('div',{class:'stat'},h('b',null,S.streak),h('small',null,plural(S.streak,'день','дня','дней')+' подряд'))),
       glyphs?h('div',{class:'kl',lang:'ja'},glyphs):null,
+      meta.free?null:h('div',{class:'refill'},h('div',{class:'hearts'},[0,1,2].map(()=>h('span',{class:'ht',html:HEART}))),h('span',null,'Сердца восстановлены: в следующем уроке снова три.')),
       L.wrong?h('p',{class:'tinfo'},'Ошибки не страшны: эти знаки вернутся в повторении через 10 минут.'):h('p',{class:'tinfo'},'Следующее повторение — завтра.')));
     foot.append(h('button',{class:'btn primary big main',onclick:exit},'Продолжить'));
     document.addEventListener('keydown',keyHandler=e=>{if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();exit();}});
