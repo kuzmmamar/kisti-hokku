@@ -380,6 +380,29 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .bp span{font:15px var(--f-poem)}
 .bp small{font-size:11px;color:var(--ink2)}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+.kigo{background:var(--card);border:1px solid var(--line);border-left:4px solid rgb(var(--sc));border-radius:12px;padding:12px 14px;margin:10px 0}
+.kigo p{margin:8px 0 6px;color:var(--ink2);font-size:14px;line-height:1.45}
+.kgh{display:flex;align-items:center;gap:12px}
+.kw{font:600 30px/1.1 var(--f-kan);color:var(--ink);white-space:nowrap}
+.kw .kb{font:inherit;color:inherit;background:none;border:0;padding:0;border-bottom:1px dotted var(--faint)}
+.kgr{flex:1;display:flex;flex-direction:column;min-width:0}.kgr span{font:14px var(--f-kan);color:rgb(var(--sc))}.kgr b{font-size:15px}
+.kspk{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--sunk);color:var(--ink2);font-size:16px;flex:none}
+.kgp{display:flex;flex-direction:column;gap:6px}
+.kgp .bp{display:flex;justify-content:space-between;gap:8px;text-align:left;background:var(--sunk);border:0;border-radius:8px;padding:8px 10px;color:var(--ink)}
+.kgp .bp span{font:15px var(--f-kan)}.kgp .bp small{color:var(--ink2);white-space:nowrap}
+.kgf{display:flex;gap:6px;overflow-x:auto;margin:6px 0 4px;padding-bottom:4px}
+.kgc{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink2);border-radius:20px;padding:7px 12px;font-size:14px}
+.kgc span{font:18px/1 var(--f-kan);color:rgb(var(--sc,236,233,226))}
+.kgc.on{background:rgba(var(--sc,236,233,226),.18);border-color:rgb(var(--sc,236,233,226));color:var(--ink)}
+.kgs{display:flex;gap:14px;align-items:flex-start;margin:22px 0 4px}
+.kgs>b{font:600 46px/1 var(--f-kan);color:rgb(var(--sc))}
+.kgs h3{margin:2px 0 4px;font-size:18px}.kgs p{margin:0;color:var(--ink2);font-size:14px;line-height:1.45}
+.kgq{margin:10px 0}
+.kgo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 12px}
+.kgc.big{justify-content:center;padding:14px;font-size:16px;border-radius:12px}.kgc.big span{font-size:26px}
+.kgc.ok{background:rgba(134,192,139,.2);border-color:var(--good-line);color:var(--ink)}
+.kgc.bad{background:rgba(226,105,79,.2);border-color:var(--shu-line)}
+.kfb{color:var(--ink2);font-size:15px;line-height:1.45}.kfb b{color:var(--ink)}
 </style>
 
 </head>
@@ -389,6 +412,7 @@ h1,h2,h3{text-wrap:balance;margin:0}
   <nav class="tabs" role="tablist" aria-label="Разделы">
     <button role="tab" id="tab-path" aria-selected="true"><span class="tk">道</span>Путь</button>
     <button role="tab" id="tab-poems" aria-selected="false"><span class="tk">句</span>Хокку</button>
+    <button role="tab" id="tab-kigo" aria-selected="false"><span class="tk">季</span>Киго</button>
     <button role="tab" id="tab-kanji" aria-selected="false"><span class="tk">字</span>Знаки</button>
   </nav>
 </div>
@@ -1944,6 +1968,68 @@ const BIO={
  ['Стиль','Мягкие, тихие, тёплые стихи. Самое знаменитое — «Слива: один цветок, и тепла ровно на один цветок».']]}
 };
 
+// Сезонные слова (киго) из хокку приложения
+const KIGO_SEASONS=[
+ {id:'spring',jp:'春',ru:'Весна',col:'230,160,175',note:'Мягкость, дымка, пробуждение. Весна в хайку — это не только цветы, но и тёплая лень, долгие дни, первые голоса птиц и лягушек.'},
+ {id:'summer',jp:'夏',ru:'Лето',col:'110,160,90',note:'Жара, буйная зелень, дожди сезона цую, короткие ночи. Ценят всё, что даёт прохладу: тень, воду, ветер.'},
+ {id:'autumn',jp:'秋',ru:'Осень',col:'210,130,60',note:'Главный сезон японской поэзии. Луна, ветер, увядание, одиночество — «саби», красота того, что уходит.'},
+ {id:'winter',jp:'冬',ru:'Зима',col:'150,170,200',note:'Холод, снег, пустые поля, конец года. Тишина и аскетичная, суровая красота.'}
+];
+const KIGO=[
+ // весна
+ {s:'spring',k:'菜の花',r:'なのはな',ru:'цветы рапса',d:'Жёлтые поля рапса в конце весны. Тёплый, широкий, «солнечный» образ.',u:['buson1']},
+ {s:'spring',k:'蛙',r:'かわず',ru:'лягушка',d:'Весной лягушки просыпаются и поют. В поэзии их веками «слушали»; Басё первым услышал прыжок.',u:['basho1','issa2']},
+ {s:'spring',k:'雀の子',r:'すずめのこ',ru:'воробьиный птенец',d:'Птенцы, которые учатся летать. Беззащитность, нежность, детство.',u:['issa1','issa3']},
+ {s:'spring',k:'梅',r:'うめ',ru:'слива умэ',d:'Цветёт первой, ещё в холода, и считается словом ранней весны. Стойкость и обещание тепла. У Рансэцу заголовок 寒梅 «зимняя слива» — цветок ещё зимой.',u:['ransetsu']},
+ {s:'spring',k:'春の海',r:'はるのうみ',ru:'весеннее море',d:'Тёплое, спокойное, ленивое море. Покой и медленное время.',u:['buson2']},
+ {s:'spring',k:'行く春',r:'ゆくはる',ru:'уходящая весна',d:'Конец весны и сожаление о ней. Прощание.',u:['basho10']},
+ {s:'spring',k:'菫',r:'すみれ',ru:'фиалка',d:'Маленький цветок у дороги. Скромная, незаметная красота.',u:['basho14']},
+ {s:'spring',k:'雲雀',r:'ひばり',ru:'жаворонок',d:'Поёт высоко в небе над полями. Высота и простор.',u:['basho15']},
+ {s:'spring',k:'桜',r:'さくら',ru:'сакура',d:'Короткое цветение — память, мимолётность жизни. В хайку просто 花 «цветы» почти всегда значит сакуру.',u:['w4','w18']},
+ {s:'spring',k:'鶯',r:'うぐいす',ru:'угуису, японская славка',d:'Первая песня весны, её называют «вестницей весны».',u:['w11']},
+ {s:'spring',k:'霞',r:'かすみ',ru:'весенняя дымка',d:'Мягкий туман весной. Туман 霧 — уже осень.',u:['w16']},
+ {s:'spring',k:'山吹',r:'やまぶき',ru:'ямабуки, керрия',d:'Жёлтые цветы у ручьёв и водопадов.',u:['w23']},
+ {s:'spring',k:'薺',r:'なずな',ru:'пастушья сумка',d:'Скромный сорняк, одна из «семи трав» новогодней каши.',u:['w24']},
+ // лето
+ {s:'summer',k:'五月雨',r:'さみだれ',ru:'летние дожди (цую)',d:'Долгие дожди пятого месяца по старому календарю. Сырость, вздувшиеся реки.',u:['buson3','basho11']},
+ {s:'summer',k:'蝉',r:'せみ',ru:'цикада',d:'Самый громкий звук японского лета. Жара и короткая жизнь.',u:['basho2']},
+ {s:'summer',k:'夏草',r:'なつくさ',ru:'летние травы',d:'Буйная, равнодушная трава. Всё проходит, а трава растёт.',u:['basho3']},
+ {s:'summer',k:'白芥子',r:'しらげし',ru:'белый мак',d:'Хрупкий цветок с тонкими лепестками.',u:['basho8']},
+ {s:'summer',k:'夏の月',r:'なつのつき',ru:'летняя луна',d:'Летние ночи коротки, луна светит недолго.',u:['basho19']},
+ {s:'summer',k:'田植え',r:'たうえ',ru:'посадка риса',d:'Залитые водой поля, песни крестьян. Начало лета.',u:['w5']},
+ {s:'summer',k:'青葉',r:'あおば',ru:'зелёная листва',d:'Свежая листва начала лета, яркая и сочная.',u:['w6']},
+ {s:'summer',k:'栗の花',r:'くりのはな',ru:'цветы каштана',d:'Невзрачные, их почти не замечают.',u:['w7']},
+ {s:'summer',k:'涼し',r:'すずし',ru:'прохлада',d:'Летнее слово: прохладу ценят именно в жару.',u:['w9']},
+ {s:'summer',k:'蛍',r:'ほたる',ru:'светлячки',d:'Огоньки летних ночей над реками.',u:['w12']},
+ {s:'summer',k:'麦の穂',r:'むぎのほ',ru:'колос ячменя',d:'Ячмень созревает в начале лета.',u:['w14']},
+ {s:'summer',k:'鵜舟',r:'うぶね',ru:'лодки с бакланами',d:'Ночная рыбалка с бакланами при факелах.',u:['w15']},
+ {s:'summer',k:'竹の子',r:'たけのこ',ru:'ростки бамбука',d:'Быстрый рост, молодость.',u:['w21']},
+ {s:'summer',k:'夏木立',r:'なつこだち',ru:'летняя роща',d:'Густые деревья, тень и тишина.',u:['w25']},
+ {s:'summer',k:'茂り',r:'しげり',ru:'густые заросли',d:'Буйная летняя зелень.',u:['w20']},
+ // осень
+ {s:'autumn',k:'名月',r:'めいげつ',ru:'полная луна осени',d:'Полнолуние 15-й ночи 8-го месяца — главная ночь любования луной.',u:['basho7','kikaku']},
+ {s:'autumn',k:'柿',r:'かき',ru:'хурма',d:'Оранжевые плоды на голых ветках. Деревенская, тёплая осень.',u:['shiki1','w26']},
+ {s:'autumn',k:'朝顔',r:'あさがお',ru:'вьюнок',d:'Цветок раскрывается утром и вянет к полудню. По старому календарю — осень.',u:['chiyo1']},
+ {s:'autumn',k:'秋の暮',r:'あきのくれ',ru:'осенний вечер',d:'И «вечер осенью», и «конец осени». Сумерки, одиночество.',u:['basho6','basho13']},
+ {s:'autumn',k:'天の川',r:'あまのがわ',ru:'Млечный путь',d:'Небесная река, праздник Танабата.',u:['basho4']},
+ {s:'autumn',k:'霧',r:'きり',ru:'туман',d:'Осенний туман скрывает горы. Весенний туман называют иначе — 霞.',u:['basho9']},
+ {s:'autumn',k:'秋深し',r:'あきふかし',ru:'глубокая осень',d:'Поздняя осень, тишина, мысли о конце.',u:['basho12']},
+ {s:'autumn',k:'身にしむ',r:'みにしむ',ru:'пробирает до костей',d:'Холодный осенний ветер, который чувствуешь всем телом.',u:['basho17']},
+ {s:'autumn',k:'萩',r:'はぎ',ru:'хаги, леспедеца',d:'Лиловые цветы, одна из «семи трав осени».',u:['basho18','w22']},
+ {s:'autumn',k:'菊',r:'きく',ru:'хризантема',d:'Праздник хризантем, долголетие, императорский цветок.',u:['basho20']},
+ {s:'autumn',k:'露',r:'つゆ',ru:'роса',d:'Символ мимолётности: роса исчезает с первым солнцем.',u:['w8']},
+ {s:'autumn',k:'雁',r:'かり',ru:'дикие гуси',d:'Клин гусей и их крик — голос осени.',u:['w3']},
+ {s:'autumn',k:'秋の風',r:'あきのかぜ',ru:'осенний ветер',d:'Холодный, «белый» ветер осени.',u:['w17']},
+ {s:'autumn',k:'秋の色',r:'あきのいろ',ru:'краски осени',d:'Багрянец клёнов, золото трав.',u:['w19']},
+ // зима
+ {s:'winter',k:'雪',r:'ゆき',ru:'снег',d:'Тишина, белизна, чистота.',u:['shiki2','w13']},
+ {s:'winter',k:'枯野',r:'かれの',ru:'увядшее поле',d:'Сухая бурая трава под ветром. Пустота и конец пути.',u:['basho5']},
+ {s:'winter',k:'初しぐれ',r:'はつしぐれ',ru:'первый зимний дождь',d:'Холодная морось начала зимы — любимый образ Басё.',u:['basho16']},
+ {s:'winter',k:'年の暮',r:'としのくれ',ru:'конец года',d:'Последние дни года, когда все стремятся домой.',u:['w1']},
+ {s:'winter',k:'冬の日',r:'ふゆのひ',ru:'зимний день',d:'Короткий, холодный, низкое солнце.',u:['w2']},
+ {s:'winter',k:'千鳥',r:'ちどり',ru:'кулики',d:'Стаи птиц над зимним морем, их тонкие крики.',u:['w10']}
+];
+
 
 </script>
 <script>
@@ -2022,12 +2108,12 @@ function decorate(){const v=$('#view');if(!v)return;v.querySelectorAll('.scrolla
 let decoT=null;addEventListener('resize',()=>{clearTimeout(decoT);decoT=setTimeout(decorate,250);});
 // ---------- tabs ----------
 let tab='path';
-['path','poems','kanji'].forEach(t=>$('#tab-'+t).addEventListener('click',()=>{tab=t;render();}));
+['path','poems','kigo','kanji'].forEach(t=>$('#tab-'+t).addEventListener('click',()=>{tab=t;render();}));
 function render(){
-  ['path','poems','kanji'].forEach(t=>$('#tab-'+t).setAttribute('aria-selected',String(t===tab)));
+  ['path','poems','kigo','kanji'].forEach(t=>$('#tab-'+t).setAttribute('aria-selected',String(t===tab)));
   const v=$('#view'); v.innerHTML=''; v.scrollTop=0;
   v.append(topBar());
-  if(tab==='path') v.append(viewPath()); else if(tab==='poems') v.append(viewPoems()); else v.append(viewKanji());
+  if(tab==='path') v.append(viewPath()); else if(tab==='poems') v.append(viewPoems()); else if(tab==='kigo') v.append(viewKigo()); else v.append(viewKanji());
   fixExpl(v);
   requestAnimationFrame(()=>requestAnimationFrame(decorate));
 }
@@ -2140,6 +2226,51 @@ function viewPoems(){
   f.append(h('p',{class:'how'},'Хокку записаны вертикально, как в оригинале: читаются сверху вниз, столбцы справа налево. Подчёркнутые знаки можно нажать. Переводы — дословные, чтобы видеть, какой иероглиф что значит.'));
   UNITS.filter(u=>u.lines).forEach(u=>f.append(poemCard(u,true)));
   return f;
+}
+
+// ---------- kigo ----------
+let kigoSeason='all';
+function kigoWord(k){return h('span',{class:'kw',lang:'ja'},[...k].map(ch=>M[ch]&&M[ch].t==='kan'?h('button',{class:'kb',onclick:e=>{e.stopPropagation();openKanji(ch);},'aria-label':'Знак '+ch},ch):ch));}
+function kigoCard(k,sea){
+  return h('div',{class:'kigo',style:`--sc:${sea.col}`},
+    h('div',{class:'kgh'},kigoWord(k.k),h('div',{class:'kgr'},h('span',{lang:'ja'},k.r),h('b',null,k.ru)),
+      h('button',{class:'kspk','aria-label':'Слушать '+k.r,onclick:()=>speak(k.r)},'♪')),
+    h('p',null,k.d),
+    h('div',{class:'kgp'},k.u.map(id=>{const u=UNITS.find(x=>x.id===id);return u?h('button',{class:'bp',onclick:()=>openUnit(u)},h('span',{lang:'ja'},u.lines.join(' ')),h('small',null,u.author)):null;})));
+}
+function viewKigo(){
+  const f=document.createDocumentFragment();
+  f.append(h('div',{class:'how'},h('b',{lang:'ja'},'季語 '),h('b',null,'Киго — сезонные слова. '),
+    'В каждом классическом хокку есть слово, которое указывает на время года. Оно работает как ключ: одно слово «лягушка» или «хурма» сразу даёт японцу погоду, свет, запахи и настроение. Поэты сверяются со сборниками киго — «сайдзики». Сезоны считают по старому лунному календарю, поэтому вьюнок и Млечный путь относятся к осени.'));
+  f.append(h('div',{class:'row kgq'},h('button',{class:'btn primary',onclick:kigoQuiz},'Угадай сезон — 10 вопросов')));
+  const chips=h('div',{class:'kgf',role:'tablist','aria-label':'Сезон'},
+    [{id:'all',jp:'四季',ru:'Все'}].concat(KIGO_SEASONS).map(s=>h('button',{class:'kgc'+(kigoSeason===s.id?' on':''),style:s.col?`--sc:${s.col}`:'','aria-selected':String(kigoSeason===s.id),
+      onclick:()=>{kigoSeason=s.id;render();}},h('span',{lang:'ja'},s.jp),s.ru)));
+  f.append(chips);
+  KIGO_SEASONS.filter(s=>kigoSeason==='all'||kigoSeason===s.id).forEach(s=>{
+    const list=KIGO.filter(k=>k.s===s.id);
+    f.append(h('div',{class:'kgs',style:`--sc:${s.col}`},h('b',{lang:'ja'},s.jp),h('div',null,h('h3',null,s.ru+' · '+list.length+' '+plural(list.length,'слово','слова','слов')),h('p',null,s.note))));
+    list.forEach(k=>f.append(kigoCard(k,s)));
+  });
+  return f;
+}
+function kigoQuiz(){
+  const qs=shuffle(KIGO).slice(0,10);let i=0,ok=0;const box=h('div',{class:'kqz'});
+  const step=()=>{box.innerHTML='';
+    if(i>=qs.length){S.xp+=ok;save();
+      box.append(h('div',{class:'qbig',lang:'ja'},ok>=8?'秀':ok>=5?'良':'可'),h('h2',{style:'text-align:center'},'Верно '+ok+' из '+qs.length),
+        h('p',{class:'tinfo'},'Очки опыта: +'+ok),h('div',{class:'row',style:'justify-content:center'},h('button',{class:'btn primary',onclick:kigoQuiz},'Ещё раз'),h('button',{class:'btn ghost',onclick:()=>{closeSheet();render();}},'Готово')));return;}
+    const k=qs[i];
+    box.append(h('div',{class:'tag'},'Вопрос '+(i+1)+' из '+qs.length),h('div',{class:'qbig',lang:'ja',style:'font-size:64px'},k.k),
+      h('p',{class:'tinfo',style:'font-size:16px'},h('span',{lang:'ja'},k.r),' — ',k.ru),h('p',{class:'tinfo'},'К какому сезону относится это слово?'));
+    const fb=h('div',{class:'kfb',role:'status'});
+    const opts=h('div',{class:'kgo'},KIGO_SEASONS.map(s=>h('button',{class:'kgc big',style:`--sc:${s.col}`,onclick:e=>{
+      if(opts.dataset.done)return;opts.dataset.done=1;const right=s.id===k.s;if(right)ok++;
+      opts.querySelectorAll('button').forEach(b=>{if(b.dataset.s===k.s)b.classList.add('ok');});if(!right)e.currentTarget.classList.add('bad');
+      fb.append(h('b',null,right?'Верно. ':'Это '+KIGO_SEASONS.find(x=>x.id===k.s).ru.toLowerCase()+'. '),k.d,
+        h('div',{class:'row',style:'margin-top:10px'},h('button',{class:'btn primary',onclick:()=>{i++;step();}},i+1<qs.length?'Дальше':'Итог')));},'data-s':s.id},h('span',{lang:'ja'},s.jp),s.ru)));
+    box.append(opts,fb);};
+  step();sheet(box);
 }
 
 // ---------- kanji ----------
