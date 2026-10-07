@@ -39,7 +39,7 @@ img{max-width:100%}[hidden]{display:none!important}
   --shu:#C6432A; --on-shu:#FFF7F2;
   --good:#3B7442; --good-soft:#DCEAD8; --bad:#A3344A; --bad-soft:#F3DEE2;
   --f-ui:"Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-kan:"Klee One", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+  --f-kan:"Klee One", "Shippori Mincho", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
   --f-poem:"Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
   --f-brush:"Yuji Syuku", "Shippori Mincho", "Hiragino Mincho ProN", serif;
   --r:14px;
@@ -398,11 +398,27 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .kgs>b{font:600 46px/1 var(--f-kan);color:rgb(var(--sc))}
 .kgs h3{margin:2px 0 4px;font-size:18px}.kgs p{margin:0;color:var(--ink2);font-size:14px;line-height:1.45}
 .kgq{margin:10px 0}
+.kgsm{display:block;color:rgb(var(--sc));font-size:13px;margin:-2px 0 6px}
 .kgo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 12px}
 .kgc.big{justify-content:center;padding:14px;font-size:16px;border-radius:12px}.kgc.big span{font-size:26px}
 .kgc.ok{background:rgba(134,192,139,.2);border-color:var(--good-line);color:var(--ink)}
 .kgc.bad{background:rgba(226,105,79,.2);border-color:var(--shu-line)}
 .kfb{color:var(--ink2);font-size:15px;line-height:1.45}.kfb b{color:var(--ink)}
+.konow{display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;background:linear-gradient(135deg,rgba(var(--sc),.22),var(--card) 70%);border:1px solid rgb(var(--sc));border-radius:14px;padding:14px 16px;margin:10px 0;color:var(--ink)}
+.konow small{color:var(--ink2);font-size:13px}.konow b{font:600 38px/1.15 var(--f-kan);margin-top:4px}.konow .kor{font:15px var(--f-kan);color:rgb(var(--sc))}
+.sekki{border-left:2px solid rgba(var(--sc),.5);padding-left:12px;margin:18px 0 8px 6px}
+.skh{display:flex;gap:12px;align-items:center;margin-bottom:6px}.skh>b{font:600 34px/1 var(--f-kan);color:rgb(var(--sc))}
+.skh div{display:flex;flex-direction:column}.skh span{font:13px var(--f-kan);color:var(--ink2)}.skh strong{font-size:17px}.skh small{color:var(--ink2);font-size:12.5px}
+.ko{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+.ko.now{border-color:rgb(var(--sc));box-shadow:0 0 0 2px rgba(var(--sc),.25)}
+.kon{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(var(--sc),.18);color:rgb(var(--sc));font-weight:600;font-size:13px}
+.kob{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.kob>b{font-size:15px}.kob small{color:var(--ink2);font-size:12.5px}
+.kok{display:flex;align-items:center;gap:8px}.kok .kw{font-size:24px}.kok em{font-style:normal;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;background:rgb(var(--sc));color:#111;border-radius:6px;padding:2px 6px}
+.kor{font:13px var(--f-kan);color:var(--ink2)}
+.kow{font-size:13px;color:var(--ink2);margin-top:3px}.kow span[lang]{font:15px var(--f-kan);color:rgb(var(--sc))}
+.skw{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin:14px 0 2px}
+.kx{border-left:2px solid var(--shu);padding-left:8px;color:var(--ink)!important}
+.kgo.one{grid-template-columns:1fr}.kgo.one .kgc.big{justify-content:flex-start;text-align:left;font-size:15px;padding:12px 14px}
 </style>
 
 </head>
@@ -2030,6 +2046,117 @@ const KIGO=[
  {s:'winter',k:'千鳥',r:'ちどり',ru:'кулики',d:'Стаи птиц над зимним морем, их тонкие крики.',u:['w10']}
 ];
 
+// 二十四節気 и 七十二候 (японский вариант, «Рякухонрэки» 1874). Даты примерные: каждый год сдвигаются на день.
+const SEKKI=[
+ {s:'spring',k:'立春',r:'りっしゅん',ru:'Начало весны',d:[2,4]},
+ {s:'spring',k:'雨水',r:'うすい',ru:'Дождевая вода',d:[2,19]},
+ {s:'spring',k:'啓蟄',r:'けいちつ',ru:'Пробуждение насекомых',d:[3,6]},
+ {s:'spring',k:'春分',r:'しゅんぶん',ru:'Весеннее равноденствие',d:[3,21]},
+ {s:'spring',k:'清明',r:'せいめい',ru:'Чистый свет',d:[4,5]},
+ {s:'spring',k:'穀雨',r:'こくう',ru:'Дожди для злаков',d:[4,20]},
+ {s:'summer',k:'立夏',r:'りっか',ru:'Начало лета',d:[5,5]},
+ {s:'summer',k:'小満',r:'しょうまん',ru:'Малое изобилие',d:[5,21]},
+ {s:'summer',k:'芒種',r:'ぼうしゅ',ru:'Посев колосовых',d:[6,6]},
+ {s:'summer',k:'夏至',r:'げし',ru:'Летнее солнцестояние',d:[6,21]},
+ {s:'summer',k:'小暑',r:'しょうしょ',ru:'Малая жара',d:[7,7]},
+ {s:'summer',k:'大暑',r:'たいしょ',ru:'Большая жара',d:[7,23]},
+ {s:'autumn',k:'立秋',r:'りっしゅう',ru:'Начало осени',d:[8,8]},
+ {s:'autumn',k:'処暑',r:'しょしょ',ru:'Конец жары',d:[8,23]},
+ {s:'autumn',k:'白露',r:'はくろ',ru:'Белые росы',d:[9,8]},
+ {s:'autumn',k:'秋分',r:'しゅうぶん',ru:'Осеннее равноденствие',d:[9,23]},
+ {s:'autumn',k:'寒露',r:'かんろ',ru:'Холодные росы',d:[10,8]},
+ {s:'autumn',k:'霜降',r:'そうこう',ru:'Выпадение инея',d:[10,23]},
+ {s:'winter',k:'立冬',r:'りっとう',ru:'Начало зимы',d:[11,7]},
+ {s:'winter',k:'小雪',r:'しょうせつ',ru:'Малые снега',d:[11,22]},
+ {s:'winter',k:'大雪',r:'たいせつ',ru:'Большие снега',d:[12,7]},
+ {s:'winter',k:'冬至',r:'とうじ',ru:'Зимнее солнцестояние',d:[12,21]},
+ {s:'winter',k:'小寒',r:'しょうかん',ru:'Малые холода',d:[1,5]},
+ {s:'winter',k:'大寒',r:'だいかん',ru:'Большие холода',d:[1,20]}
+];
+// k — название, r — чтение, ru — перевод, d — начало [месяц, день], w — сезонное слово внутри названия
+const KO=[
+ ['東風解凍','はるかぜこおりをとく','Восточный ветер растапливает лёд',[2,4],'東風 «коти», весенний восточный ветер'],
+ ['黄鶯睍睆','うぐいすなく','Поёт угуису',[2,9],'鶯 угуису'],
+ ['魚上氷','うおこおりをいずる','Рыба поднимается ко льду',[2,14],'薄氷 тонкий лёд'],
+ ['土脉潤起','つちのしょううるおいおこる','Земля влажнеет от дождя',[2,19],'春の土 весенняя земля'],
+ ['霞始靆','かすみはじめてたなびく','Стелется первая дымка',[2,24],'霞 весенняя дымка'],
+ ['草木萌動','そうもくめばえいずる','Травы и деревья дают ростки',[3,1],'下萌 первые ростки'],
+ ['蟄虫啓戸','すごもりむしとをひらく','Насекомые открывают двери зимовий',[3,6],'啓蟄 пробуждение насекомых'],
+ ['桃始笑','ももはじめてさく','Персик начинает «улыбаться» — цвести',[3,11],'桃の花 цветы персика'],
+ ['菜虫化蝶','なむしちょうとなる','Гусеницы становятся бабочками',[3,16],'蝶 бабочка'],
+ ['雀始巣','すずめはじめてすくう','Воробьи вьют гнёзда',[3,21],'雀の巣 гнездо воробья'],
+ ['桜始開','さくらはじめてひらく','Начинает цвести сакура',[3,26],'桜 сакура'],
+ ['雷乃発声','かみなりすなわちこえをはっす','Гром подаёт голос',[3,31],'春雷 весенний гром'],
+ ['玄鳥至','つばめきたる','Прилетают ласточки',[4,5],'燕 ласточка'],
+ ['鴻雁北','こうがんきたへかえる','Дикие гуси улетают на север',[4,10],'帰る雁 улетающие гуси'],
+ ['虹始見','にじはじめてあらわる','Появляется первая радуга',[4,15],'春の虹 весенняя радуга'],
+ ['葭始生','あしはじめてしょうず','Прорастает тростник',[4,20],'葦の角 ростки тростника'],
+ ['霜止出苗','しもやんでなえいづる','Иней уходит, всходит рисовая рассада',[4,25],'苗代 рисовая рассада'],
+ ['牡丹華','ぼたんはなさく','Цветёт пион',[4,30],'牡丹 пион (уже лето)'],
+ ['蛙始鳴','かわずはじめてなく','Начинают петь лягушки',[5,5],'蛙 лягушка'],
+ ['蚯蚓出','みみずいづる','Выползают земляные черви',[5,10],'蚯蚓 дождевой червь'],
+ ['竹笋生','たけのこしょうず','Пробиваются ростки бамбука',[5,15],'竹の子 ростки бамбука'],
+ ['蚕起食桑','かいこおきてくわをはむ','Шелкопряд просыпается и ест шелковицу',[5,21],'蚕 шелкопряд'],
+ ['紅花栄','べにばなさかう','Пышно цветёт сафлор',[5,26],'紅花 сафлор'],
+ ['麦秋至','むぎのときいたる','Приходит «осень ячменя» — жатва',[5,31],'麦の秋 жатва ячменя'],
+ ['蟷螂生','かまきりしょうず','Рождаются богомолы',[6,6],'蟷螂生る новорождённый богомол'],
+ ['腐草為蛍','くされたるくさほたるとなる','Гнилая трава становится светлячками',[6,11],'蛍 светлячок'],
+ ['梅子黄','うめのみきばむ','Желтеют плоды сливы',[6,16],'梅雨 «сливовые дожди»'],
+ ['乃東枯','なつかれくさかるる','Увядает черноголовка',[6,21],'夏枯草 черноголовка'],
+ ['菖蒲華','あやめはなさく','Цветут ирисы',[6,27],'菖蒲 ирис'],
+ ['半夏生','はんげしょうず','Прорастает «полулетник»',[7,2],'半夏生 середина лета'],
+ ['温風至','あつかぜいたる','Приходит горячий ветер',[7,7],'熱風 горячий ветер'],
+ ['蓮始開','はすはじめてひらく','Раскрывается лотос',[7,12],'蓮 лотос'],
+ ['鷹乃学習','たかすなわちわざをなす','Молодые ястребы учатся летать',[7,17],'鷹 ястреб'],
+ ['桐始結花','きりはじめてはなをむすぶ','Павловния завязывает плоды',[7,23],'桐の実 плоды павловнии'],
+ ['土潤溽暑','つちうるおうてむしあつし','Земля влажная, душный зной',[7,29],'溽暑 духота'],
+ ['大雨時行','たいうときどきにふる','Временами льют сильные ливни',[8,3],'夕立 летний ливень'],
+ ['涼風至','すずかぜいたる','Приходит прохладный ветер',[8,8],'秋の風 осенний ветер'],
+ ['寒蝉鳴','ひぐらしなく','Поёт вечерняя цикада хигураси',[8,13],'蜩 хигураси'],
+ ['蒙霧升降','ふかききりまとう','Окутывает густой туман',[8,18],'霧 туман'],
+ ['綿柎開','わたのはなしべひらく','Раскрываются коробочки хлопка',[8,23],'綿 хлопок'],
+ ['天地始粛','てんちはじめてさむし','Небо и земля начинают остывать',[8,28],'冷やか прохлада'],
+ ['禾乃登','こくものすなわちみのる','Созревает рис',[9,2],'稲 рис'],
+ ['草露白','くさのつゆしろし','Роса на траве белеет',[9,8],'露 роса'],
+ ['鶺鴒鳴','せきれいなく','Поют трясогузки',[9,13],'鶺鴒 трясогузка'],
+ ['玄鳥去','つばめさる','Улетают ласточки',[9,18],'燕帰る ласточки улетают'],
+ ['雷乃収声','かみなりすなわちこえをおさむ','Гром прячет голос',[9,23],'秋の雷 последний гром'],
+ ['蟄虫坏戸','むしかくれてとをふさぐ','Насекомые закрывают двери зимовий',[9,28],'虫 осенние насекомые'],
+ ['水始涸','みずはじめてかる','С полей спускают воду',[10,3],'落し水 спуск воды с полей'],
+ ['鴻雁来','こうがんきたる','Прилетают дикие гуси',[10,8],'雁 дикие гуси'],
+ ['菊花開','きくのはなひらく','Распускаются хризантемы',[10,13],'菊 хризантема'],
+ ['蟋蟀在戸','きりぎりすとにあり','Сверчки поют у дверей',[10,18],'蟋蟀 сверчок'],
+ ['霜始降','しもはじめてふる','Выпадает первый иней',[10,23],'初霜 первый иней'],
+ ['霎時施','こさめときどきふる','Временами моросит дождик',[10,28],'時雨 сигурэ, холодная морось'],
+ ['楓蔦黄','もみじつたきばむ','Желтеют клёны и плющ',[11,2],'紅葉 багряные листья'],
+ ['山茶始開','つばきはじめてひらく','Начинает цвести сазанква',[11,7],'山茶花 сазанква'],
+ ['地始凍','ちはじめてこおる','Земля начинает замерзать',[11,12],'凍る замерзать'],
+ ['金盞香','きんせんかさく','Цветёт нарцисс',[11,17],'水仙 нарцисс'],
+ ['虹蔵不見','にじかくれてみえず','Радуга прячется и не видна',[11,22],'冬の虹 зимняя радуга'],
+ ['朔風払葉','きたかぜこのはをはらう','Северный ветер сметает листья',[11,27],'木枯 «иссушающий деревья» ветер'],
+ ['橘始黄','たちばなはじめてきばむ','Желтеют плоды татибаны',[12,2],'橘 татибана, японский мандарин'],
+ ['閉塞成冬','そらさむくふゆとなる','Небо стынет, приходит зима',[12,7],'冬 зима'],
+ ['熊蟄穴','くまあなにこもる','Медведи уходят в берлоги',[12,12],'熊穴に入る медведь в берлоге'],
+ ['鱖魚群','さけのうおむらがる','Лосось идёт косяками',[12,16],'鮭 лосось'],
+ ['乃東生','なつかれくさしょうず','Прорастает черноголовка',[12,21],'冬至 зимнее солнцестояние'],
+ ['麋角解','おおしかのつのおつる','Олени сбрасывают рога',[12,26],'鹿 олень'],
+ ['雪下出麦','ゆきわたりてむぎいづる','Под снегом прорастает ячмень',[12,31],'麦の芽 всходы ячменя'],
+ ['芹乃栄','せりすなわちさかう','Буйно растёт сэри, водяной сельдерей',[1,5],'芹 сэри'],
+ ['水泉動','しみずあたたかをふくむ','Подо льдом оживают родники',[1,10],'寒の水 зимняя вода'],
+ ['雉始雊','きじはじめてなく','Кричит фазан',[1,15],'雉 фазан (весна)'],
+ ['款冬華','ふきのはなさく','Расцветает белокопытник',[1,20],'蕗の薹 почки белокопытника'],
+ ['水沢腹堅','さわみずこおりつめる','Вода в болотах промерзает насквозь',[1,25],'氷 лёд'],
+ ['鶏始乳','にわとりはじめてとやにつく','Куры садятся на яйца',[1,30],'寒卵 зимние яйца']
+].map((a,i)=>({n:i+1,k:a[0],r:a[1],ru:a[2],d:a[3],w:a[4],sk:Math.floor(i/3)}));
+// Привязка киго из хокку к сэкки (sk, индекс SEKKI) и, где совпадает, к микросезону (ko, номер 1–72)
+const KIGO_KO={
+ '菜の花':{ko:9},'蛙':{ko:19,x:'В календаре ко лягушки «начинают петь» в первые дни лета, а как киго 蛙 — весна. Поэты и календарь здесь расходятся.'},
+ '雀の子':{ko:10},'梅':{sk:0},'春の海':{sk:3},'行く春':{sk:5},'菫':{sk:4},'雲雀':{sk:4},'桜':{ko:11},'鶯':{ko:2},'霞':{ko:5},'山吹':{sk:5},'薺':{sk:4},
+ '五月雨':{ko:27},'蝉':{sk:10},'夏草':{sk:9},'白芥子':{sk:7},'夏の月':{sk:10},'田植え':{sk:8},'青葉':{sk:6},'栗の花':{sk:8},'涼し':{sk:11},'蛍':{ko:26},'麦の穂':{ko:24},'鵜舟':{sk:10},'竹の子':{ko:21},'夏木立':{sk:6},'茂り':{sk:7},
+ '名月':{sk:15},'柿':{sk:17},'朝顔':{sk:12},'秋の暮':{sk:17},'天の川':{sk:12},'霧':{ko:39},'秋深し':{sk:17},'身にしむ':{sk:16},'萩':{sk:14},'菊':{ko:50},'露':{ko:43},'雁':{ko:49},'秋の風':{ko:37},'秋の色':{ko:54},
+ '雪':{sk:20},'枯野':{sk:19},'初しぐれ':{ko:53,x:'В календаре ко морось сигурэ — конец осени, а у поэтов 初しぐれ «первая сигурэ» открывает зиму.'},'年の暮':{sk:23},'冬の日':{sk:21},'千鳥':{sk:20}
+};
+
 
 </script>
 <script>
@@ -2229,47 +2356,78 @@ function viewPoems(){
 }
 
 // ---------- kigo ----------
-let kigoSeason='all';
+const MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const koStart=(d,y)=>new Date(y,d[0]-1,d[1]);
+function koRange(i){const a=KO[i].d,b=KO[(i+1)%72].d,y=2026;const end=new Date(koStart(b,y)-864e5);
+  return a[0]===end.getMonth()+1?a[1]+'–'+end.getDate()+' '+MON[a[0]-1]:a[1]+' '+MON[a[0]-1]+' – '+end.getDate()+' '+MON[end.getMonth()];}
+function koNow(){const t=new Date();t.setHours(0,0,0,0);let best=71,bd=-1;
+  KO.forEach((k,i)=>{let s=koStart(k.d,t.getFullYear());if(s>t)s=koStart(k.d,t.getFullYear()-1);if(s>bd){bd=s;best=i;}});return best;}
+const seaOf=id=>KIGO_SEASONS.find(x=>x.id===id);
+let kigoSeason=null;
 function kigoWord(k){return h('span',{class:'kw',lang:'ja'},[...k].map(ch=>M[ch]&&M[ch].t==='kan'?h('button',{class:'kb',onclick:e=>{e.stopPropagation();openKanji(ch);},'aria-label':'Знак '+ch},ch):ch));}
-function kigoCard(k,sea){
+function kigoCard(k,sea){const l=KIGO_KO[k.k]||{};
   return h('div',{class:'kigo',style:`--sc:${sea.col}`},
     h('div',{class:'kgh'},kigoWord(k.k),h('div',{class:'kgr'},h('span',{lang:'ja'},k.r),h('b',null,k.ru)),
       h('button',{class:'kspk','aria-label':'Слушать '+k.r,onclick:()=>speak(k.r)},'♪')),
-    h('p',null,k.d),
+    h('p',null,k.d),l.x?h('p',{class:'kx'},l.x):null,
     h('div',{class:'kgp'},k.u.map(id=>{const u=UNITS.find(x=>x.id===id);return u?h('button',{class:'bp',onclick:()=>openUnit(u)},h('span',{lang:'ja'},u.lines.join(' ')),h('small',null,u.author)):null;})));
 }
+function koRow(i,cur){const k=KO[i];
+  return h('div',{class:'ko'+(cur?' now':''),id:'ko'+k.n},
+    h('span',{class:'kon'},k.n),
+    h('div',{class:'kob'},h('div',{class:'kok'},kigoWord(k.k),cur?h('em',null,'сейчас'):null),
+      h('div',{class:'kor',lang:'ja'},k.r),h('b',null,k.ru),h('small',null,koRange(i)),
+      h('div',{class:'kow'},h('span',null,'киго: '),h('span',{lang:'ja'},k.w.split(' ')[0]),' '+k.w.split(' ').slice(1).join(' '))),
+    h('button',{class:'kspk','aria-label':'Слушать','onclick':()=>speak(k.r)},'♪'));}
 function viewKigo(){
-  const f=document.createDocumentFragment();
+  const f=document.createDocumentFragment();const now=koNow(),nk=KO[now],nsk=SEKKI[nk.sk];
+  if(!kigoSeason)kigoSeason=nsk.s;
   f.append(h('div',{class:'how'},h('b',{lang:'ja'},'季語 '),h('b',null,'Киго — сезонные слова. '),
-    'В каждом классическом хокку есть слово, которое указывает на время года. Оно работает как ключ: одно слово «лягушка» или «хурма» сразу даёт японцу погоду, свет, запахи и настроение. Поэты сверяются со сборниками киго — «сайдзики». Сезоны считают по старому лунному календарю, поэтому вьюнок и Млечный путь относятся к осени.'));
-  f.append(h('div',{class:'row kgq'},h('button',{class:'btn primary',onclick:kigoQuiz},'Угадай сезон — 10 вопросов')));
-  const chips=h('div',{class:'kgf',role:'tablist','aria-label':'Сезон'},
+    'Японский год делится не на 4 части, а мельче: 4 сезона → 24 «сэкки» (節気, по 15 дней) → 72 «ко» (候, микросезоны по 5 дней). У каждого ко есть имя-картинка: «прилетают ласточки», «гнилая трава становится светлячками». Почти в каждом имени спрятано киго — слово, которое поэт ставит в хокку, чтобы читатель сразу понял время года. Счёт идёт по старому календарю, поэтому весна начинается 4 февраля, а осень — 8 августа.'));
+  const ns=seaOf(nsk.s);
+  f.append(h('button',{class:'konow',style:`--sc:${ns.col}`,onclick:()=>{kigoSeason=nsk.s;render();setTimeout(()=>{const el=document.getElementById('ko'+nk.n);el&&el.scrollIntoView({block:'center',behavior:'smooth'});},60);}},
+    h('small',null,'Сейчас · '+ns.ru.toLowerCase()+' · '+nsk.k+' «'+nsk.ru+'» · ко '+nk.n+' из 72'),
+    h('b',{lang:'ja'},nk.k),h('span',{lang:'ja',class:'kor'},nk.r),h('span',null,nk.ru+' · '+koRange(now)),
+    h('small',null,'Дальше: '+KO[(now+1)%72].ru.toLowerCase()+' ('+KO[(now+1)%72].k+')')));
+  f.append(h('div',{class:'row kgq'},h('button',{class:'btn primary',onclick:kigoQuiz},'Тест: сезоны и микросезоны')));
+  f.append(h('div',{class:'kgf',role:'tablist','aria-label':'Сезон'},
     [{id:'all',jp:'四季',ru:'Все'}].concat(KIGO_SEASONS).map(s=>h('button',{class:'kgc'+(kigoSeason===s.id?' on':''),style:s.col?`--sc:${s.col}`:'','aria-selected':String(kigoSeason===s.id),
-      onclick:()=>{kigoSeason=s.id;render();}},h('span',{lang:'ja'},s.jp),s.ru)));
-  f.append(chips);
+      onclick:()=>{kigoSeason=s.id;render();}},h('span',{lang:'ja'},s.jp),s.ru))));
   KIGO_SEASONS.filter(s=>kigoSeason==='all'||kigoSeason===s.id).forEach(s=>{
-    const list=KIGO.filter(k=>k.s===s.id);
-    f.append(h('div',{class:'kgs',style:`--sc:${s.col}`},h('b',{lang:'ja'},s.jp),h('div',null,h('h3',null,s.ru+' · '+list.length+' '+plural(list.length,'слово','слова','слов')),h('p',null,s.note))));
-    list.forEach(k=>f.append(kigoCard(k,s)));
+    const n=KIGO.filter(k=>k.s===s.id).length;
+    f.append(h('div',{class:'kgs',style:`--sc:${s.col}`},h('b',{lang:'ja'},s.jp),h('div',null,h('h3',null,s.ru),h('small',{class:'kgsm'},'6 сэкки · 18 ко · '+n+' '+plural(n,'киго','киго','киго')+' из хокку'),h('p',null,s.note))));
+    SEKKI.forEach((sk,si)=>{if(sk.s!==s.id)return;
+      const box=h('div',{class:'sekki',style:`--sc:${s.col}`});
+      box.append(h('div',{class:'skh'},h('b',{lang:'ja'},sk.k),h('div',null,h('span',{lang:'ja'},sk.r),h('strong',null,sk.ru),h('small',null,'с '+sk.d[1]+' '+MON[sk.d[0]-1]+' · сэкки '+(si+1)+' из 24'))));
+      for(let j=0;j<3;j++){const i=si*3+j;box.append(koRow(i,i===now));
+        KIGO.filter(k=>(KIGO_KO[k.k]||{}).ko===i+1).forEach(k=>box.append(kigoCard(k,s)));}
+      const loose=KIGO.filter(k=>{const l=KIGO_KO[k.k]||{};return !l.ko&&l.sk===si;});
+      if(loose.length){box.append(h('div',{class:'skw'},'Киго из хокку в эти две недели'));loose.forEach(k=>box.append(kigoCard(k,s)));}
+      f.append(box);});
   });
   return f;
 }
 function kigoQuiz(){
-  const qs=shuffle(KIGO).slice(0,10);let i=0,ok=0;const box=h('div',{class:'kqz'});
+  const qs=shuffle(shuffle(KIGO).slice(0,5).map(k=>({t:'s',k})).concat(shuffle(KO).slice(0,5).map(k=>({t:'k',k})))) ;let i=0,ok=0;const box=h('div',{class:'kqz'});
   const step=()=>{box.innerHTML='';
     if(i>=qs.length){S.xp+=ok;save();
       box.append(h('div',{class:'qbig',lang:'ja'},ok>=8?'秀':ok>=5?'良':'可'),h('h2',{style:'text-align:center'},'Верно '+ok+' из '+qs.length),
         h('p',{class:'tinfo'},'Очки опыта: +'+ok),h('div',{class:'row',style:'justify-content:center'},h('button',{class:'btn primary',onclick:kigoQuiz},'Ещё раз'),h('button',{class:'btn ghost',onclick:()=>{closeSheet();render();}},'Готово')));return;}
-    const k=qs[i];
-    box.append(h('div',{class:'tag'},'Вопрос '+(i+1)+' из '+qs.length),h('div',{class:'qbig',lang:'ja',style:'font-size:64px'},k.k),
-      h('p',{class:'tinfo',style:'font-size:16px'},h('span',{lang:'ja'},k.r),' — ',k.ru),h('p',{class:'tinfo'},'К какому сезону относится это слово?'));
+    const q=qs[i],k=q.k;let opts,right,expl;
+    box.append(h('div',{class:'tag'},'Вопрос '+(i+1)+' из '+qs.length),h('div',{class:'qbig',lang:'ja',style:'font-size:'+(k.k.length>3?48:64)+'px'},k.k));
+    if(q.t==='s'){box.append(h('p',{class:'tinfo',style:'font-size:16px'},h('span',{lang:'ja'},k.r),' — ',k.ru),h('p',{class:'tinfo'},'К какому сезону относится это киго?'));
+      opts=KIGO_SEASONS.map(s=>({id:s.id,col:s.col,lab:[h('span',{lang:'ja'},s.jp),s.ru]}));right=k.s;expl=k.d;}
+    else{const sk=SEKKI[k.sk];box.append(h('p',{class:'tinfo',style:'font-size:16px',lang:'ja'},k.r),h('p',{class:'tinfo'},'Что значит этот микросезон?'));
+      const wrong=shuffle(KO.filter(x=>x!==k)).slice(0,3);
+      opts=shuffle([k].concat(wrong)).map(x=>({id:String(x.n),col:seaOf(SEKKI[x.sk].s).col,lab:[x.ru]}));right=String(k.n);
+      expl='Ко '+k.n+' из 72, сэкки '+sk.k+' «'+sk.ru+'», '+koRange(k.n-1)+'. Киго: '+k.w+'.';}
     const fb=h('div',{class:'kfb',role:'status'});
-    const opts=h('div',{class:'kgo'},KIGO_SEASONS.map(s=>h('button',{class:'kgc big',style:`--sc:${s.col}`,onclick:e=>{
-      if(opts.dataset.done)return;opts.dataset.done=1;const right=s.id===k.s;if(right)ok++;
-      opts.querySelectorAll('button').forEach(b=>{if(b.dataset.s===k.s)b.classList.add('ok');});if(!right)e.currentTarget.classList.add('bad');
-      fb.append(h('b',null,right?'Верно. ':'Это '+KIGO_SEASONS.find(x=>x.id===k.s).ru.toLowerCase()+'. '),k.d,
-        h('div',{class:'row',style:'margin-top:10px'},h('button',{class:'btn primary',onclick:()=>{i++;step();}},i+1<qs.length?'Дальше':'Итог')));},'data-s':s.id},h('span',{lang:'ja'},s.jp),s.ru)));
-    box.append(opts,fb);};
+    const og=h('div',{class:'kgo'+(q.t==='k'?' one':'')},opts.map(o=>h('button',{class:'kgc big','data-s':o.id,style:q.t==='s'?`--sc:${o.col}`:'',onclick:e=>{
+      if(og.dataset.done)return;og.dataset.done=1;const good=o.id===right;if(good)ok++;
+      og.querySelectorAll('button').forEach(b=>{if(b.dataset.s===right)b.classList.add('ok');});if(!good)e.currentTarget.classList.add('bad');
+      fb.append(h('b',null,good?'Верно. ':q.t==='s'?'Это '+seaOf(right).ru.toLowerCase()+'. ':'Не совсем. '),expl,
+        h('div',{class:'row',style:'margin-top:10px'},h('button',{class:'btn primary',onclick:()=>{i++;step();}},i+1<qs.length?'Дальше':'Итог')));}},o.lab)));
+    box.append(og,fb);};
   step();sheet(box);
 }
 
