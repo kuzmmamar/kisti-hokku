@@ -21,7 +21,8 @@
 @font-face{font-family:"Shippori Mincho";src:url(Shippori-500.woff) format("woff");font-weight:500;font-display:swap}
 @font-face{font-family:"Shippori Mincho";src:url(Shippori-700.woff) format("woff");font-weight:700;font-display:swap}
 @font-face{font-family:"Yuji Syuku";src:url(YujiSyuku.woff) format("woff");font-weight:400;font-display:swap}
-:root{color-scheme:dark;background:#0B0B0C;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{color-scheme:dark;background:#0B0B0C}
+html,body{margin:0;height:100%;overflow:hidden}
 body{margin:0;overscroll-behavior:none;-webkit-text-size-adjust:100%}
 img{max-width:100%}[hidden]{display:none!important}
 
@@ -63,7 +64,7 @@ body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--f-ui);-webkit-
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
 .kan{font-family:var(--f-kan)}
-#app{height:100%;display:flex;flex-direction:column;max-width:600px;margin:0 auto}
+#app{height:100%;height:100dvh;display:flex;flex-direction:column;max-width:600px;margin:0 auto;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
 main{flex:1;overflow-y:auto;padding:0 16px 24px}
 h1,h2,h3{text-wrap:balance;margin:0}
 
