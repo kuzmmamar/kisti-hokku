@@ -398,6 +398,10 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .kgs>b{font:600 46px/1 var(--f-kan);color:rgb(var(--sc))}
 .kgs h3{margin:2px 0 4px;font-size:18px}.kgs p{margin:0;color:var(--ink2);font-size:14px;line-height:1.45}
 .kgq{margin:10px 0}
+.koqs{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.koq{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;background:var(--sunk);border:0;border-left:2px solid rgb(var(--sc));border-radius:6px;padding:7px 10px;color:var(--ink)}
+.koq span{font:16px/1.35 var(--f-kan)}.koq span{display:flex;flex-wrap:wrap;column-gap:.8em}.koq i,.koq b{font-style:normal;white-space:nowrap}.koq b{font-weight:600;color:rgb(var(--sc))}
+.koq small{color:var(--ink2);font-size:12px}
 .kgsm{display:block;color:rgb(var(--sc));font-size:13px;margin:-2px 0 6px}
 .kgo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 12px}
 .kgc.big{justify-content:center;padding:14px;font-size:16px;border-radius:12px}.kgc.big span{font-size:26px}
@@ -2149,12 +2153,12 @@ const KO=[
  ['鶏始乳','にわとりはじめてとやにつく','Куры садятся на яйца',[1,30],'寒卵 зимние яйца']
 ].map((a,i)=>({n:i+1,k:a[0],r:a[1],ru:a[2],d:a[3],w:a[4],sk:Math.floor(i/3)}));
 // Привязка киго из хокку к сэкки (sk, индекс SEKKI) и, где совпадает, к микросезону (ko, номер 1–72)
+// Привязка киго из хокку к микросезону (номер ко 1–72)
 const KIGO_KO={
- '菜の花':{ko:9},'蛙':{ko:19,x:'В календаре ко лягушки «начинают петь» в первые дни лета, а как киго 蛙 — весна. Поэты и календарь здесь расходятся.'},
- '雀の子':{ko:10},'梅':{sk:0},'春の海':{sk:3},'行く春':{sk:5},'菫':{sk:4},'雲雀':{sk:4},'桜':{ko:11},'鶯':{ko:2},'霞':{ko:5},'山吹':{sk:5},'薺':{sk:4},
- '五月雨':{ko:27},'蝉':{sk:10},'夏草':{sk:9},'白芥子':{sk:7},'夏の月':{sk:10},'田植え':{sk:8},'青葉':{sk:6},'栗の花':{sk:8},'涼し':{sk:11},'蛍':{ko:26},'麦の穂':{ko:24},'鵜舟':{sk:10},'竹の子':{ko:21},'夏木立':{sk:6},'茂り':{sk:7},
- '名月':{sk:15},'柿':{sk:17},'朝顔':{sk:12},'秋の暮':{sk:17},'天の川':{sk:12},'霧':{ko:39},'秋深し':{sk:17},'身にしむ':{sk:16},'萩':{sk:14},'菊':{ko:50},'露':{ko:43},'雁':{ko:49},'秋の風':{ko:37},'秋の色':{ko:54},
- '雪':{sk:20},'枯野':{sk:19},'初しぐれ':{ko:53,x:'В календаре ко морось сигурэ — конец осени, а у поэтов 初しぐれ «первая сигурэ» открывает зиму.'},'年の暮':{sk:23},'冬の日':{sk:21},'千鳥':{sk:20}
+ '菜の花':9,'蛙':19,'雀の子':10,'梅':2,'春の海':12,'行く春':18,'菫':13,'雲雀':15,'桜':11,'鶯':2,'霞':5,'山吹':17,'薺':14,
+ '五月雨':27,'蝉':32,'夏草':29,'白芥子':22,'夏の月':33,'田植え':25,'青葉':20,'栗の花':25,'涼し':36,'蛍':26,'麦の穂':24,'鵜舟':31,'竹の子':21,'夏木立':21,'茂り':23,
+ '名月':46,'柿':52,'朝顔':37,'秋の暮':54,'天の川':38,'霧':39,'秋深し':53,'身にしむ':51,'萩':44,'菊':50,'露':43,'雁':49,'秋の風':37,'秋の色':54,
+ '雪':61,'枯野':58,'初しぐれ':53,'年の暮':72,'冬の日':64,'千鳥':62
 };
 
 
@@ -2365,72 +2369,41 @@ function koNow(){const t=new Date();t.setHours(0,0,0,0);let best=71,bd=-1;
 const seaOf=id=>KIGO_SEASONS.find(x=>x.id===id);
 let kigoSeason=null;
 function kigoWord(k){return h('span',{class:'kw',lang:'ja'},[...k].map(ch=>M[ch]&&M[ch].t==='kan'?h('button',{class:'kb',onclick:e=>{e.stopPropagation();openKanji(ch);},'aria-label':'Знак '+ch},ch):ch));}
-function kigoCard(k,sea){const l=KIGO_KO[k.k]||{};
-  return h('div',{class:'kigo',style:`--sc:${sea.col}`},
-    h('div',{class:'kgh'},kigoWord(k.k),h('div',{class:'kgr'},h('span',{lang:'ja'},k.r),h('b',null,k.ru)),
-      h('button',{class:'kspk','aria-label':'Слушать '+k.r,onclick:()=>speak(k.r)},'♪')),
-    h('p',null,k.d),l.x?h('p',{class:'kx'},l.x):null,
-    h('div',{class:'kgp'},k.u.map(id=>{const u=UNITS.find(x=>x.id===id);return u?h('button',{class:'bp',onclick:()=>openUnit(u)},h('span',{lang:'ja'},u.lines.join(' ')),h('small',null,u.author)):null;})));
-}
+function koQuotes(n){const out=[];
+  KIGO.filter(k=>KIGO_KO[k.k]===n).forEach(k=>k.u.forEach(id=>{const u=UNITS.find(x=>x.id===id);if(!u)return;
+    const key=[...k.k].filter(c=>c>'一'||/[ぁ-ん]/.test(c));const ov={w18:'花の香は撞く',basho14:'すみれ草',w7:'軒の栗',w5:'植ゑて立ち去る'};const ln=u.lines.find(l=>ov[id]&&l.includes(ov[id]))||u.lines.find(l=>l.includes(k.k))||u.lines.find(l=>key.some(c=>c>'一'&&l.includes(c)))||u.lines[0];
+    out.push(h('button',{class:'koq',onclick:()=>openUnit(u)},h('span',{lang:'ja'},u.lines.map(l=>h(l===ln?'b':'i',null,l))),h('small',null,u.author+' · '+k.k+' '+k.ru)));}));
+  return out.length?h('div',{class:'koqs'},out):null;}
 function koRow(i,cur){const k=KO[i];
   return h('div',{class:'ko'+(cur?' now':''),id:'ko'+k.n},
     h('span',{class:'kon'},k.n),
     h('div',{class:'kob'},h('div',{class:'kok'},kigoWord(k.k),cur?h('em',null,'сейчас'):null),
       h('div',{class:'kor',lang:'ja'},k.r),h('b',null,k.ru),h('small',null,koRange(i)),
-      h('div',{class:'kow'},h('span',null,'киго: '),h('span',{lang:'ja'},k.w.split(' ')[0]),' '+k.w.split(' ').slice(1).join(' '))),
+      h('div',{class:'kow'},h('span',null,'киго: '),h('span',{lang:'ja'},k.w.split(' ')[0]),' '+k.w.split(' ').slice(1).join(' ')),koQuotes(k.n)),
     h('button',{class:'kspk','aria-label':'Слушать','onclick':()=>speak(k.r)},'♪'));}
 function viewKigo(){
   const f=document.createDocumentFragment();const now=koNow(),nk=KO[now],nsk=SEKKI[nk.sk];
   if(!kigoSeason)kigoSeason=nsk.s;
   f.append(h('div',{class:'how'},h('b',{lang:'ja'},'季語 '),h('b',null,'Киго — сезонные слова. '),
-    'Японский год делится не на 4 части, а мельче: 4 сезона → 24 «сэкки» (節気, по 15 дней) → 72 «ко» (候, микросезоны по 5 дней). У каждого ко есть имя-картинка: «прилетают ласточки», «гнилая трава становится светлячками». Почти в каждом имени спрятано киго — слово, которое поэт ставит в хокку, чтобы читатель сразу понял время года. Счёт идёт по старому календарю, поэтому весна начинается 4 февраля, а осень — 8 августа.'));
+    'Японский год делится не на 4 части, а мельче: 4 сезона → 24 «сэкки» (節気, по 15 дней) → 72 «ко» (候, микросезоны по 5 дней). У каждого ко есть имя-картинка: «прилетают ласточки», «гнилая трава становится светлячками». Почти в каждом имени спрятано киго — слово, которое поэт ставит в хокку, чтобы читатель сразу понял время года. Под микросезонами — строки из хокку с их сезонными словами; нажмите, чтобы открыть стих. Счёт идёт по старому календарю, поэтому весна начинается 4 февраля, а осень — 8 августа.'));
   const ns=seaOf(nsk.s);
   f.append(h('button',{class:'konow',style:`--sc:${ns.col}`,onclick:()=>{kigoSeason=nsk.s;render();setTimeout(()=>{const el=document.getElementById('ko'+nk.n);el&&el.scrollIntoView({block:'center',behavior:'smooth'});},60);}},
     h('small',null,'Сейчас · '+ns.ru.toLowerCase()+' · '+nsk.k+' «'+nsk.ru+'» · ко '+nk.n+' из 72'),
     h('b',{lang:'ja'},nk.k),h('span',{lang:'ja',class:'kor'},nk.r),h('span',null,nk.ru+' · '+koRange(now)),
     h('small',null,'Дальше: '+KO[(now+1)%72].ru.toLowerCase()+' ('+KO[(now+1)%72].k+')')));
-  f.append(h('div',{class:'row kgq'},h('button',{class:'btn primary',onclick:kigoQuiz},'Тест: сезоны и микросезоны')));
   f.append(h('div',{class:'kgf',role:'tablist','aria-label':'Сезон'},
     [{id:'all',jp:'四季',ru:'Все'}].concat(KIGO_SEASONS).map(s=>h('button',{class:'kgc'+(kigoSeason===s.id?' on':''),style:s.col?`--sc:${s.col}`:'','aria-selected':String(kigoSeason===s.id),
       onclick:()=>{kigoSeason=s.id;render();}},h('span',{lang:'ja'},s.jp),s.ru))));
   KIGO_SEASONS.filter(s=>kigoSeason==='all'||kigoSeason===s.id).forEach(s=>{
-    const n=KIGO.filter(k=>k.s===s.id).length;
-    f.append(h('div',{class:'kgs',style:`--sc:${s.col}`},h('b',{lang:'ja'},s.jp),h('div',null,h('h3',null,s.ru),h('small',{class:'kgsm'},'6 сэкки · 18 ко · '+n+' '+plural(n,'киго','киго','киго')+' из хокку'),h('p',null,s.note))));
+        f.append(h('div',{class:'kgs',style:`--sc:${s.col}`},h('b',{lang:'ja'},s.jp),h('div',null,h('h3',null,s.ru),h('small',{class:'kgsm'},'6 сэкки · 18 микросезонов'),h('p',null,s.note))));
     SEKKI.forEach((sk,si)=>{if(sk.s!==s.id)return;
       const box=h('div',{class:'sekki',style:`--sc:${s.col}`});
       box.append(h('div',{class:'skh'},h('b',{lang:'ja'},sk.k),h('div',null,h('span',{lang:'ja'},sk.r),h('strong',null,sk.ru),h('small',null,'с '+sk.d[1]+' '+MON[sk.d[0]-1]+' · сэкки '+(si+1)+' из 24'))));
-      for(let j=0;j<3;j++){const i=si*3+j;box.append(koRow(i,i===now));
-        KIGO.filter(k=>(KIGO_KO[k.k]||{}).ko===i+1).forEach(k=>box.append(kigoCard(k,s)));}
-      const loose=KIGO.filter(k=>{const l=KIGO_KO[k.k]||{};return !l.ko&&l.sk===si;});
-      if(loose.length){box.append(h('div',{class:'skw'},'Киго из хокку в эти две недели'));loose.forEach(k=>box.append(kigoCard(k,s)));}
+      for(let j=0;j<3;j++){const i=si*3+j;box.append(koRow(i,i===now));}
       f.append(box);});
   });
   return f;
 }
-function kigoQuiz(){
-  const qs=shuffle(shuffle(KIGO).slice(0,5).map(k=>({t:'s',k})).concat(shuffle(KO).slice(0,5).map(k=>({t:'k',k})))) ;let i=0,ok=0;const box=h('div',{class:'kqz'});
-  const step=()=>{box.innerHTML='';
-    if(i>=qs.length){S.xp+=ok;save();
-      box.append(h('div',{class:'qbig',lang:'ja'},ok>=8?'秀':ok>=5?'良':'可'),h('h2',{style:'text-align:center'},'Верно '+ok+' из '+qs.length),
-        h('p',{class:'tinfo'},'Очки опыта: +'+ok),h('div',{class:'row',style:'justify-content:center'},h('button',{class:'btn primary',onclick:kigoQuiz},'Ещё раз'),h('button',{class:'btn ghost',onclick:()=>{closeSheet();render();}},'Готово')));return;}
-    const q=qs[i],k=q.k;let opts,right,expl;
-    box.append(h('div',{class:'tag'},'Вопрос '+(i+1)+' из '+qs.length),h('div',{class:'qbig',lang:'ja',style:'font-size:'+(k.k.length>3?48:64)+'px'},k.k));
-    if(q.t==='s'){box.append(h('p',{class:'tinfo',style:'font-size:16px'},h('span',{lang:'ja'},k.r),' — ',k.ru),h('p',{class:'tinfo'},'К какому сезону относится это киго?'));
-      opts=KIGO_SEASONS.map(s=>({id:s.id,col:s.col,lab:[h('span',{lang:'ja'},s.jp),s.ru]}));right=k.s;expl=k.d;}
-    else{const sk=SEKKI[k.sk];box.append(h('p',{class:'tinfo',style:'font-size:16px',lang:'ja'},k.r),h('p',{class:'tinfo'},'Что значит этот микросезон?'));
-      const wrong=shuffle(KO.filter(x=>x!==k)).slice(0,3);
-      opts=shuffle([k].concat(wrong)).map(x=>({id:String(x.n),col:seaOf(SEKKI[x.sk].s).col,lab:[x.ru]}));right=String(k.n);
-      expl='Ко '+k.n+' из 72, сэкки '+sk.k+' «'+sk.ru+'», '+koRange(k.n-1)+'. Киго: '+k.w+'.';}
-    const fb=h('div',{class:'kfb',role:'status'});
-    const og=h('div',{class:'kgo'+(q.t==='k'?' one':'')},opts.map(o=>h('button',{class:'kgc big','data-s':o.id,style:q.t==='s'?`--sc:${o.col}`:'',onclick:e=>{
-      if(og.dataset.done)return;og.dataset.done=1;const good=o.id===right;if(good)ok++;
-      og.querySelectorAll('button').forEach(b=>{if(b.dataset.s===right)b.classList.add('ok');});if(!good)e.currentTarget.classList.add('bad');
-      fb.append(h('b',null,good?'Верно. ':q.t==='s'?'Это '+seaOf(right).ru.toLowerCase()+'. ':'Не совсем. '),expl,
-        h('div',{class:'row',style:'margin-top:10px'},h('button',{class:'btn primary',onclick:()=>{i++;step();}},i+1<qs.length?'Дальше':'Итог')));}},o.lab)));
-    box.append(og,fb);};
-  step();sheet(box);
-}
-
 // ---------- kanji ----------
 function ktile(it){
   const lv=level(it.g);
