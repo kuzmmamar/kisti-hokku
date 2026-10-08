@@ -429,6 +429,16 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .pm .kana,.pm .cyr{color:var(--ink)}
 .hlleg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;margin:8px 0 10px}.hlleg span{white-space:nowrap}
 .koq i{color:var(--ink)}
+/* разделы — плавающие шарики справа */
+.tabs{position:fixed;right:max(10px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);z-index:15;flex-direction:column;gap:12px;border:0!important;background:none!important;padding:0!important}
+.tabs button{flex:none;width:56px;height:56px;border-radius:50%;padding:0;justify-content:center;gap:0;font-size:9.5px;line-height:1.1;
+  background:rgba(22,23,25,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.tabs button .tk{font-size:21px;line-height:1.05}
+.tabs button[aria-selected="true"]{background:var(--ai);color:var(--on-ai);border-color:var(--ai)}
+main{padding-right:72px!important;}
+.top{margin-right:-56px}.brand{white-space:nowrap}
+main{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
+@media (min-width:700px){main{padding-right:16px!important}.top{margin-right:0}}
 </style>
 
 </head>
@@ -2361,6 +2371,7 @@ function viewPath(){
     h('div',{class:'t'},h('b',null,'Цель дня: ',S.todayXp,' / ',S.goal,' очков'),
       h('small',null, due.length? 'К повторению: '+due.length+' '+plural(due.length,'знак','знака','знаков') : (Object.keys(S.srs).length?'Повторять пока нечего — учите новое':'Начните с ключей: из них собраны все знаки'))),
     due.length? h('button',{class:'btn primary',onclick:startReview},'Повторить'):null));
+  f.append(hlLegend());
   const p=h('div',{class:'path'});
   const offs=[0,40,60,40,0,-40,-60,-40];
   let curFound=false;
@@ -2494,6 +2505,7 @@ function viewKigo(){
   if(!kigoSeason)kigoSeason=nsk.s;
   f.append(h('div',{class:'how'},h('b',{lang:'ja'},'季語 '),h('b',null,'Киго — сезонные слова. '),
     'Японский год делится не на 4 части, а мельче: 4 сезона → 24 «сэкки» (節気, по 15 дней) → 72 «ко» (候, микросезоны по 5 дней). У каждого ко есть имя-картинка: «прилетают ласточки», «гнилая трава становится светлячками». Почти в каждом имени спрятано киго — слово, которое поэт ставит в хокку, чтобы читатель сразу понял время года. Под микросезонами — строки из хокку с их сезонными словами; нажмите, чтобы открыть стих. Счёт идёт по старому календарю, поэтому весна начинается 4 февраля, а осень — 8 августа.'));
+  f.append(hlLegend());
   const ns=seaOf(nsk.s);
   f.append(h('button',{class:'konow',style:`--sc:${ns.col}`,onclick:()=>{kigoSeason=nsk.s;render();setTimeout(()=>{const el=document.getElementById('ko'+nk.n);el&&el.scrollIntoView({block:'center',behavior:'smooth'});},60);}},
     h('small',null,'Сейчас · '+ns.ru.toLowerCase()+' · '+nsk.k+' «'+nsk.ru+'» · ко '+nk.n+' из 72'),
