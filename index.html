@@ -401,7 +401,7 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .kgq{margin:10px 0}
 .koqs{display:flex;flex-direction:column;gap:5px;margin-top:8px}
 .koq{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;background:var(--sunk);border:0;border-left:2px solid rgb(var(--sc));border-radius:6px;padding:7px 10px;color:var(--ink)}
-.koq span{font:16px/1.35 var(--f-kan)}.koq span{display:flex;flex-wrap:wrap;column-gap:.8em}.koq i,.koq b{font-style:normal;white-space:nowrap}.koq b{font-weight:600;color:rgb(var(--sc))}.koq small b{font:600 14px var(--f-kan)}.koq small{margin-bottom:2px}.koro{font-size:12.5px;font-style:italic;color:var(--ink2)}
+.koq span{font:16px/1.35 var(--f-kan)}.koq>span{display:flex;flex-wrap:wrap;column-gap:.8em}.koq i,.koq b{font-style:normal;white-space:nowrap}.koq b{font-weight:600;color:rgb(var(--sc))}.koq small b{font:600 14px var(--f-kan)}.koq small{margin-bottom:2px}.koro{font-size:12.5px;font-style:italic;color:var(--ink2)}
 .koq small{color:var(--ink2);font-size:12px}
 .kgsm{display:block;color:rgb(var(--sc));font-size:13px;margin:-2px 0 6px}
 .kgo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 12px}
@@ -424,6 +424,11 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .skw{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin:14px 0 2px}
 .kx{border-left:2px solid var(--shu);padding-left:8px;color:var(--ink)!important}
 .kgo.one{grid-template-columns:1fr}.kgo.one .kgc.big{justify-content:flex-start;text-align:left;font-size:15px;padding:12px 14px}
+.hk-k{color:#8FD08A!important}.hk-1{color:#FFFFFF!important}.hk-c{color:#F0654A!important;font-weight:700}.hk-2{color:#E8CF9C!important}
+.tate .hk-k .kb,.tate .hk-1 .kb,.tate .hk-2 .kb,.tate .hk-c .kb{color:inherit;text-decoration-color:currentColor}
+.pm .kana,.pm .cyr{color:var(--ink)}
+.hlleg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;margin:8px 0 10px}.hlleg span{white-space:nowrap}
+.koq i{color:var(--ink)}
 </style>
 
 </head>
@@ -2166,6 +2171,81 @@ const KIGO_KO={
 const ORDER=["basho11","basho7","w17","w5","buson3","w7","buson1","basho8","w26","basho1","w2","w6","basho17","basho14","basho18","w4","w25","basho20","kikaku","basho4","buson2","basho9","issa2","basho13","w21","w23","basho2","basho10","basho16","basho12","issa1","w8","w22","w14","w9","ransetsu","w24","basho15","basho6","w10","w16","basho5","w20","basho3","basho19","w13","issa3","w18","w3","w1","w19","w12","chiyo1","shiki2","shiki1","w15","w11"];
 const DIFF={"basho11":5.7,"basho7":6,"w17":6.2,"w5":6.4,"buson3":6.4,"w7":6.6,"buson1":6.7,"basho8":7.1,"w26":7.3,"basho1":7.5,"w2":7.5,"w6":7.6,"basho17":7.8,"basho14":7.8,"basho18":7.9,"w4":8,"w25":8,"basho20":8,"kikaku":8,"basho4":8.2,"buson2":8.3,"basho9":8.4,"issa2":8.5,"basho13":8.6,"w21":8.8,"w23":8.8,"basho2":8.8,"basho10":8.9,"basho16":9,"basho12":9,"issa1":9.2,"w8":9.3,"w22":9.3,"w14":9.5,"w9":9.7,"ransetsu":9.8,"w24":9.8,"basho15":10,"basho6":10,"w10":10,"w16":10.2,"basho5":10.3,"w20":10.3,"basho3":10.4,"basho19":10.4,"w13":10.5,"issa3":10.6,"w18":10.7,"w3":11,"w1":11.2,"w19":11.2,"w12":11.2,"chiyo1":11.2,"shiki2":11.3,"shiki1":11.3,"w15":12,"w11":14.8};
 
+// Разметка хокку: {сезонное слово}, [разрыв], | — граница образов без отдельного режущего слова.
+// До первого разрыва — первый образ, после — второй. j/k — строки через «/», c/t — как в тексте.
+const HL={
+basho11:{j:'{五月雨}を/あつめて早[し]/最上川',k:'{さみだれ}を/あつめてはや[し]/もがみがわ',c:'{самидарэ} о / ацумэтэ хая[си] / могамигава',t:'Собрав все {дожди / лета}, мчится стремительно| / река Могами.'},
+basho7:{j:'{名月}[や]/池をめぐりて/夜もすがら',k:'{めいげつ}[や]/いけをめぐりて/よもすがら',c:'{мэйгэцу} [я] / икэ о мэгуритэ / ё мо сугара',t:'{Полная луна}[.] / Брожу вокруг пруда / всю ночь напролёт.'},
+w17:{j:'石山の/石より白[し]/{秋の風}',k:'いしやまの/いしよりしろ[し]/{あきのかぜ}',c:'исияма-но / иси ёри сиро[си] / {аки-но кадзэ}',t:'Белее камней / Каменной горы [—] / {осенний ветер}.'},
+w5:{j:'{田一枚}/{植ゑて}立ち去る|/柳[かな]',k:'{たいちまい}/{うえて}たちさる|/やなぎ[かな]',c:'{та итимай} / {уэтэ} тати сару| / янаги [кана]',t:'{Засадили целое поле}, / пока я ушёл| / от ивы.'},
+buson3:{j:'{五月雨}[や]/大河を前に/家二軒',k:'{さみだれ}[や]/たいがをまえに/いえにけん',c:'{самидарэ} [я] / тайга о маэ ни / иэ никэн',t:'{Летние дожди}[.] / Перед большой рекой — / два дома.'},
+w7:{j:'世の人の/見付けぬ{花}[や]/軒の{栗}',k:'よのひとの/みつけぬ{はな}[や]/のきの{くり}',c:'ё-но хито-но / мицукэну {хана} [я] / ноки-но {кури}',t:'{Цветок}, которого / люди мира не замечают, [—] / {каштан} у стрехи.'},
+buson1:{j:'{菜の花}[や]/月は東に/日は西に',k:'{なのはな}[や]/つきはひがしに/ひはにしに',c:'{на-но хана} [я] / цуки ва хигаси ни / хи ва ниси ни',t:'{Цветы рапса}[.] / Луна — на востоке, / солнце — на западе.'},
+basho8:{j:'{白芥子}に|/羽もぐ蝶の/形見[かな]',k:'{しらげし}に|/はねもぐちょうの/かたみ[かな]',c:'{сирагэси} ни| / ханэ могу тё: но / катами [кана]',t:'{Белому маку}| / бабочка, оборвав крыло, / оставляет на память.'},
+w26:{j:'里古りて|/{柿}の木持たぬ/家もなし',k:'さとふりて|/{かき}のきもたぬ/いえもなし',c:'сато фуритэ| / {каки}-но ки мотану / иэ мо наси',t:'Старая деревня[:] / нет ни одного дома / без дерева {хурмы}.'},
+basho1:{j:'古池[や]/{蛙}飛びこむ/水の音',k:'ふるいけ[や]/{かわず}とびこむ/みずのおと',c:'фуру икэ [я] / {кавадзу} тобикому / мидзу но ото',t:'Старый пруд[.] / Прыгает {лягушка} — / звук воды.'},
+w2:{j:'{冬の日}[や]/馬上に氷る/影法師',k:'{ふゆのひ}[や]/ばじょうにこおる/かげぼうし',c:'{фую-но хи} [я] / бадзё: ни ко:ру / кагэбо:си',t:'{Зимний день}[.] / В седле замёрзла / моя тень.'},
+w6:{j:'あらたふと|/{青葉}若葉の/日の光',k:'あらとうと|/{あおば}わかばの/ひのひかり',c:'ара то:то| / {аоба} вакаба-но / хи-но хикари',t:'О, благоговенье[!] / {Зелёная, юная листва} / в лучах солнца.'},
+basho17:{j:'野ざらしを|/心に風の/{しむ身}[かな]',k:'のざらしを|/こころにかぜの/{しむみ}[かな]',c:'нодзараси о| / кокоро ни кадзэ но / {симу ми} [кана]',t:'Готов белеть костями в поле [—] / {ветер пронизывает / сердце и тело}.'},
+basho14:{j:'山路来て/何やらゆか[し]/{すみれ草}',k:'やまじきて/なにやらゆか[し]/{すみれぐさ}',c:'ямадзи китэ / нанияра юка[си] / {сумирэгуса}',t:'Шёл горной тропой — / отчего-то так мило[:] / {фиалки} в траве.'},
+basho18:{j:'一つ家に/遊女も寝た[り]/{萩}と月',k:'ひとつやに/ゆうじょもねた[り]/{はぎ}とつき',c:'хитоцу я ни / ю:дзё мо нэта[ри] / {хаги} то цуки',t:'Под одной крышей / ночуют и гетеры[.] / {Цветы хаги} и луна.'},
+w4:{j:'さまざまの/事思ひ出す|/{桜}[かな]',k:'さまざまの/ことおもいだす|/{さくら}[かな]',c:'самадзама-но / кото омоидасу| / {сакура} [кана]',t:'Сколько всего / вспоминается мне [—] / {цветёт вишня}.'},
+w25:{j:'木啄も/庵はやぶら[ず]/{夏木立}',k:'きつつきも/いおはやぶら[ず]/{なつこだち}',c:'кицуцуки мо / ио ва ябура[дзу] / {нацукодати}',t:'Даже дятел / не тронул хижину[.] / {Летняя роща}.'},
+basho20:{j:'{菊の香}[や]/奈良には古き/仏達',k:'{きくのか}[や]/ならにはふるき/ほとけたち',c:'{кику но ка} [я] / нара ни ва фуруки / хотокэтати',t:'{Запах хризантем}[.] / В Наре — древние / статуи Будды.'},
+kikaku:{j:'{名月}[や]/畳の上に/松の影',k:'{めいげつ}[や]/たたみのうえに/まつのかげ',c:'{мэйгэцу} [я] / татами но уэ ни / мацу но кагэ',t:'{Полная луна}[.] / На татами лежит / тень сосны.'},
+basho4:{j:'荒海[や]/佐渡によこたふ/{天河}',k:'あらうみ[や]/さどによこたう/{あまのがわ}',c:'арауми[я] / садо ни ёкотау / {ама-но-гава}',t:'Бурное море[.] / Над Садо простёрлась / {Небесная река}.'},
+buson2:{j:'{春の海}|/終日/のたりのたり[かな]',k:'{はるのうみ}|/ひねもす/のたりのたり[かな]',c:'{хару но уми}| / хинэмосу / нотари нотари [кана]',t:'{Весеннее море}[.] / Весь день напролёт / колышется, колышется.'},
+basho9:{j:'{霧しぐれ}|/富士を見ぬ日[ぞ]/面白き',k:'{きりしぐれ}|/ふじをみぬひ[ぞ]/おもしろき',c:'{кири сигурэ}| / фудзи о мину хи [дзо] / омосироки',t:'{Туман и морось}[.] / День, когда не видно Фудзи, — / тоже хорош.'},
+issa2:{j:'{痩蛙}|/まけるな一茶/これにあり',k:'{やせがえる}|/まけるないっさ/これにあり',c:'{ясэгаэру}| / макэру на исса / корэ ни ари',t:'{Тощий лягушонок}[,] / не сдавайся! Исса / тут, рядом.'},
+basho13:{j:'この道[や]/行く人なしに/{秋の暮}',k:'このみち[や]/ゆくひとなしに/{あきのくれ}',c:'коно мити [я] / юку хито наси ни / {аки но курэ}',t:'Этот путь [—] / никто не идёт по нему. / {Осенний вечер}.'},
+w21:{j:'{竹の子}[や]/稚き時の/絵のすさび',k:'{たけのこ}[や]/おさなきときの/えのすさび',c:'{такэ-но ко} [я] / осанаки токи-но / э-но сусаби',t:'{Ростки бамбука} [—] / в детстве я рисовал их / ради забавы.'},
+w23:{j:'ほろほろと/{山吹}散る[か]/滝の音',k:'ほろほろと/{やまぶき}ちる[か]/たきのおと',c:'хорохоро то / {ямабуки} тиру [ка] / таки-но ото',t:'Тихо-тихо / осыпаются {ямабуки}[?] / А рядом — гул водопада.'},
+basho2:{j:'閑さ[や]/岩にしみ入る/{蝉}の声',k:'しずかさ[や]/いわにしみいる/{せみ}のこえ',c:'сидзукаса [я] / ива ни сими иру / {сэми} но коэ',t:'Тишина[.] / В скалы впитывается / стрёкот {цикад}.'},
+basho10:{j:'{行く春}[や]/鳥啼き魚の/目は泪',k:'{ゆくはる}[や]/とりなきうおの/めはなみだ',c:'{юку хару} [я] / тори наки уо но / мэ ва намида',t:'{Уходит весна}[.] / Плачут птицы, у рыб / в глазах слёзы.'},
+basho16:{j:'{初しぐれ}|/猿も小蓑を/ほしげなり',k:'{はつしぐれ}|/さるもこみのを/ほしげなり',c:'{хацусигурэ}| / сару мо комино о / хосигэ нари',t:'{Первый зимний дождь}[.] / Даже обезьянке хочется / соломенный плащик.'},
+basho12:{j:'{秋深き}|/隣は何を/する人[ぞ]',k:'{あきふかき}|/となりはなにを/するひと[ぞ]',c:'{аки фукаки}| / тонари ва нани о / суру хито [дзо]',t:'{Глубокая осень}[.] / Чем же занят он, / мой сосед?'},
+issa1:{j:'{雀の子}|/そこのけそこのけ/御馬が通る',k:'{すずめのこ}|/そこのけそこのけ/おうまがとおる',c:'{судзумэ но ко}| / соко нокэ соко нокэ / о-ума га то:ру',t:'{Воробышек}[,] / прочь, прочь с дороги — / едет господский конь!'},
+w8:{j:'今日より[や]/書付消さん/笠の{露}',k:'きょうより[や]/かきつけけさん/かさの{つゆ}',c:'кё: ёри [я] / какицукэ кэсан / каса-но {цую}',t:'С этого дня| / смою {росой} / надпись на шляпе.'},
+w22:{j:'波の間[や]/小貝にまじる/{萩}の塵',k:'なみのま[や]/こがいにまじる/{はぎ}のちり',c:'нами-но ма [я] / когай ни мадзиру / {хаги}-но тири',t:'Между волнами| / мелкие ракушки / и лепестки {хаги}.'},
+w14:{j:'{麦の穂}を/便りにつかむ|/別れ[かな]',k:'{むぎのほ}を/たよりにつかむ|/わかれ[かな]',c:'{муги-но хо} о / таёри ни цукаму| / вакарэ [кана]',t:'За {колос ячменя} / хватаюсь, как за опору, [—] / расставание.'},
+w9:{j:'{涼しさ}を/我宿にして|/ねまる[なり]',k:'{すずしさ}を/わがやどにして|/ねまる[なり]',c:'{судзусиса} о / вага ядо ни ситэ| / нэмару [нари]',t:'{Прохладу} / сделав своим домом,| / сижу привольно.'},
+ransetsu:{j:'{梅}一輪|/一輪ほどの/暖かさ',k:'{うめ}いちりん|/いちりんほどの/あたたかさ',c:'{умэ} итирин| / итирин ходо но / ататакаса',t:'{Слива}: один цветок [—] / и тепла прибавилось / ровно на цветок.'},
+w24:{j:'よく見れば|/{薺}花咲く/垣根[かな]',k:'よくみれば|/{なずな}はなさく/かきね[かな]',c:'ёку мирэба| / {надзуна} хана саку / какинэ [кана]',t:'Присмотрелся [—] / под изгородью / цветёт {пастушья сумка}.'},
+basho15:{j:'{雲雀}より/空にやすらふ|/峠[かな]',k:'{ひばり}より/そらにやすらう|/とうげ[かな]',c:'{хибари} ёри / сора ни ясурау| / то:гэ [кана]',t:'Выше {жаворонка} / отдыхаю в небе [—] / горный перевал.'},
+basho6:{j:'枯枝に/烏のとまり[けり]/{秋の暮}',k:'かれえだに/からすのとまり[けり]/{あきのくれ}',c:'карээда ни / карасу но томари [кэри] / {аки но курэ}',t:'На сухой ветке / сидит ворона[.] / {Осенний вечер}.'},
+w10:{j:'星崎の/闇を見よと[や]/啼く{千鳥}',k:'ほしざきの/やみをみよと[や]/なく{ちどり}',c:'хосидзаки-но / ями о миё то [я] / наку {тидори}',t:'Мыс Звёзд: / «Смотри во тьму!» [—] / кричат {кулики}.'},
+w16:{j:'{春}なれ[や]/名もなき山の/{薄霞}',k:'{はる}なれ[や]/なもなきやまの/{うすがすみ}',c:'{хару} нарэ [я] / на мо наки яма-но / {усугасуми}',t:'Вот и {весна}[!] / Над безымянной горой / {лёгкая дымка}.'},
+basho5:{j:'旅に病んで|/夢は{枯野}を/かけ廻る',k:'たびにやんで|/ゆめは{かれの}を/かけめぐる',c:'таби ни яндэ| / юмэ ва {карэно} о / какэмэгуру',t:'В пути занемог[.] / Сны по {сухим полям} / всё кружат, кружат.'},
+w20:{j:'嵐山/藪の{茂り}[や]/風の筋',k:'あらしやま/やぶの{しげり}[や]/かぜのすじ',c:'арасияма / ябу-но {сигэри} [я] / кадзэ-но судзи',t:'Арасияма. / В {густом бамбуке}| / видны дорожки ветра.'},
+basho3:{j:'{夏草}[や]/兵どもが/夢の跡',k:'{なつくさ}[や]/つわものどもが/ゆめのあと',c:'{нацукуса} [я] / цувамоно домо га / юмэ но ато',t:'{Летние травы} [—] / вот что от снов / воинов осталось.'},
+basho19:{j:'蛸壺[や]/はかなき夢を/{夏の月}',k:'たこつぼ[や]/はかなきゆめを/{なつのつき}',c:'такоцубо [я] / хаканаки юмэ о / {нацу но цуки}',t:'Горшки-ловушки[:] / осьминогам снятся сны / под {летней луной}.'},
+w13:{j:'酒のめば/いとど寝られ[ぬ]/夜の{雪}',k:'さけのめば/いとどねられ[ぬ]/よるの{ゆき}',c:'сакэ номэба / итодо нэрарэ[ну] / ёру-но {юки}',t:'Выпью сакэ — / ещё хуже не спится[.] / {Снег} ночью.'},
+issa3:{j:'我と来て/遊べ[や]親の/ない{雀}',k:'われときて/あそべ[や]おやの/ない{すずめ}',c:'варэ то китэ / асобэ [я] оя но / най {судзумэ}',t:'Иди ко мне, / поиграем[,] {воробей} / без родителей.'},
+w18:{j:'鐘消えて|/{花}の香は撞く/夕べ[かな]',k:'かねきえて|/{はな}のかはつく/ゆうべ[かな]',c:'канэ киэтэ| / {хана}-но ка ва цуку / ю:бэ [кана]',t:'Колокол умолк [—] / а запах {цветов} всё звонит. / Вечер.'},
+w3:{j:'病{雁}の/{夜寒}に落ちて|/旅寝[かな]',k:'やむ{かり}の/{よさむ}におちて|/たびね[かな]',c:'яму {кари}-но / {ёсаму} ни отитэ| / табинэ [кана]',t:'Больной {гусь} / упал в {холодную ночь} [—] / ночлег в пути.'},
+w1:{j:'{年暮れ}[ぬ]/笠着て草鞋/はきながら',k:'{としくれ}[ぬ]/かさきてわらじ/はきながら',c:'{тоси курэ}[ну] / каса китэ варадзи / хаки нагара',t:'{Год кончился}[,] / а я всё в шляпе, / в соломенных сандалиях.'},
+w19:{j:'{秋の色}|/糠味噌壺も/なかり[けり]',k:'{あきのいろ}|/ぬかみそつぼも/なかり[けり]',c:'{аки-но иро}| / нукамисо цубо мо / накари [кэри]',t:'{Осенние краски} [—] / а в доме нет даже горшка / с соленьями.'},
+w12:{j:'{蛍}見[や]/船頭酔うて/おぼつかな',k:'{ほたる}み[や]/せんどうようて/おぼつかな',c:'{хотару} ми [я] / сэндо: ё:тэ / обоцукана',t:'Смотрим {светлячков}[.] / Лодочник пьян — / лодку качает.'},
+chiyo1:{j:'{朝顔}に|/釣瓶とられて/もらひ水',k:'{あさがお}に|/つるべとられて/もらいみず',c:'{асагао} ни| / цурубэ торарэтэ / мораи мидзу',t:'{Вьюнок}| обвил / колодезное ведро — / прошу воды у соседей.'},
+shiki2:{j:'いくたびも|/{雪}の深さを/尋ね[けり]',k:'いくたびも|/{ゆき}のふかさを/たずね[けり]',c:'икутабимо| / {юки} но фукаса о / тадзунэ [кэри]',t:'Снова и снова| / спрашиваю, глубок ли / выпавший {снег}.'},
+shiki1:{j:'{柿}くへば|/鐘が鳴る[なり]/法隆寺',k:'{かき}くえば|/かねがなる[なり]/ほうりゅうじ',c:'{каки} куэба| / канэ га нару [нари] / хо:рю:дзи',t:'Ем {хурму} [—] / и звонит колокол / храма Хорюдзи.'},
+w15:{j:'おもしろうて/やがて悲しき|/{鵜舟}[かな]',k:'おもしろうて/やがてかなしき|/{うぶね}[かな]',c:'омосиро:тэ / ягатэ канасики| / {убунэ} [кана]',t:'Весело, весело — / а потом так грустно[:] / {лодки с бакланами}.'},
+w11:{j:'{鶯}[や]/餅に糞する/縁の先',k:'{うぐいす}[や]/もちにふんする/えんのさき',c:'{угуису} [я] / моти ни фун суру / эн-но саки',t:'{Угуису}| / на рисовую лепёшку нагадила / с края веранды.'}
+};
+// разбор разметки: возвращает [{s:текст, c:'k'|'c'|'1'|'2'}] по строкам (sep — разделитель строк, если есть)
+function hlParse(m){const out=[];let img='1',inK=false,inC=false,cur=null;
+  const push=(ch,c)=>{if(cur&&cur.c===c)cur.s+=ch;else{cur={s:ch,c};out.push(cur);}};
+  for(const ch of m){
+    if(ch==='{'){inK=true;continue;} if(ch==='}'){inK=false;continue;}
+    if(ch==='['){inC=true;continue;} if(ch===']'){inC=false;img='2';continue;}
+    if(ch==='|'){img='2';continue;}
+    push(ch,inC?'c':inK?'k':img);}
+  return out;}
+function hlLines(m){// для j/k: «/» — граница строк, возвращает массив строк сегментов
+  const segs=hlParse(m),lines=[[]];
+  segs.forEach(sg=>{const parts=sg.s.split('/');parts.forEach((p,i)=>{if(i)lines.push([]);if(p)lines[lines.length-1].push({s:p,c:sg.c});});});
+  return lines;}
+
 
 </script>
 <script>
@@ -2293,7 +2373,7 @@ function viewPath(){
       !open?h('span',{class:'lock',html:ico.lock}):null);
     if(i) p.append(h('div',{class:'dash gap'}));
     p.append(h('div',{class:'ustep',style:`transform:translateX(${offs[i%8]}px)`},node,
-      h('div',{class:'ulabel'},h('b',null,u.author?u.author+' · '+u.title:u.title), u.lines?h('span',{class:'jp'},u.lines[0]):(u.kind==='review'?'10 знаков из 5 уроков':u.sub))));
+      h('div',{class:'ulabel'},h('b',null,u.author?u.author+' · '+u.title:u.title), u.lines?h('span',{class:'jp'},hlJ(u,'j','',0)):(u.kind==='review'?'10 знаков из 5 уроков':u.sub))));
   });
   f.append(p);
   let armed=false;
@@ -2325,7 +2405,7 @@ function openUnit(u){
   const rev=u.kind==='review';
   body.append(SUMI.el(rev?'rad':u.id,u.node,'hero'),h('div',{class:'tag'},rev?'Повторение':u.author?(u.author+' · '+u.year):'Основы'), h('h2',{style:'margin:2px 0 12px'},u.title));
   if(rev) body.append(h('p',{class:'how',style:'margin-top:0'},'10 случайных знаков из пяти прошлых уроков: '+u.src.map(id=>UNITS.find(x=>x.id===id).title).join(', ')+'. Каждый раз набор новый. Выбор из 4 и рисование по названию, пять сердец.'));
-  else if(u.lines) body.append(poemCard(u,false));
+  else if(u.lines) body.append(hlLegend(),poemCard(u,false));
   else body.append(h('p',{class:'how',style:'margin-top:0'},'Ключи — повторяющиеся части знаков. Именно их каллиграф сокращает в первую очередь: они предсказуемы, и глаз узнаёт их по силуэту. Сохранять нужно то, что отличает знак от соседей.'));
   body.append(h('div',{class:'sec-h'},rev?'Знаки этих уроков':'Знаки урока'));
   body.append(h('div',{class:'kgrid'},u.items.map(g=>ktile(M[g]))));
@@ -2333,6 +2413,16 @@ function openUnit(u){
     : h('p',{class:'empty'},'Урок откроется после предыдущего. Или нажмите «Открыть все уроки» внизу пути.'));
   sheet(body);
 }
+
+// ---------- цветовая разметка хокку ----------
+const HLC={k:'hk-k','1':'hk-1',c:'hk-c','2':'hk-2'};
+function hlSegLines(u,f){const H=typeof HL!=='undefined'&&HL[u.id];const src=f==='j'?u.lines:u.kana;
+  if(!H)return src.map(l=>[{s:l,c:''}]);const L=hlLines(H[f]);return L.length===src.length?L:src.map(l=>[{s:l,c:''}]);}
+function hlJ(u,f,sep,only){const L=hlSegLines(u,f||'j');const out=[];
+  L.forEach((segs,i)=>{if(only!=null&&i!==only)return;if(out.length&&sep)out.push(sep);segs.forEach(s=>out.push(s.c?h('span',{class:HLC[s.c]},s.s):s.s));});return out;}
+function hlS(u,f){const H=typeof HL!=='undefined'&&HL[u.id];const plain=f==='t'?u.tr:u.cyr;if(!H)return [plain];
+  return hlParse(H[f]).map(s=>h('span',{class:HLC[s.c]},s.s));}
+const hlLegend=()=>h('div',{class:'hlleg'},h('span',{class:'hk-k'},'■ сезонное слово'),h('span',{class:'hk-1'},'■ первый образ'),h('span',{class:'hk-c'},'■ разрыв'),h('span',{class:'hk-2'},'■ второй образ'));
 
 // ---------- poems ----------
 function openBio(name){const b=BIO[name];if(!b)return;
@@ -2343,23 +2433,25 @@ function openBio(name){const b=BIO[name];if(!b)return;
     h('div',{class:'biohead'},h('div',{class:'bioname'},h('b',{lang:'ja'},b.jp),h('span',null,b.read+' · '+b.years))),
     h('p',{class:'biolead'},b.lead),
     b.parts.map(([t,x])=>h('div',{class:'biopart'+(/самура|ниндзя/i.test(t)?' hl':'')},h('h4',null,t),h('p',null,x))),
-    poems.length?h('div',null,h('div',{class:'sec-h'},'Его хокку в приложении — '+poems.length),h('div',{class:'biopoems'},poems.map(u=>h('button',{class:'bp',onclick:()=>{closeSheet();openUnit(u);}},h('span',{lang:'ja'},u.lines[0]),h('small',null,u.title))))):null));}
+    poems.length?h('div',null,h('div',{class:'sec-h'},'Его хокку в приложении — '+poems.length),h('div',{class:'biopoems'},poems.map(u=>h('button',{class:'bp',onclick:()=>{closeSheet();openUnit(u);}},h('span',{lang:'ja'},hlJ(u,'j','',0)),h('small',null,u.title))))):null));}
 function fixExpl(root){(root||document).querySelectorAll('.poem .pm > .expl').forEach(e=>e.closest('.poem').append(e));}
 function explBlock(id){const e=EXPL[id];const rows=[['s','Сезон'],['k','Разрез'],['c','Где и когда'],['n','Что было неожиданным'],['m','О чём молчит'],['z','Звук'],['v','Попробуйте увидеть']];
   return h('details',{class:'expl'},h('summary',null,'Пояснение: что видит японец'),
-    h('div',{class:'exb'},rows.filter(([k])=>e[k]).map(([k,t])=>h('div',{class:'exr'+(k==='v'?' see':'')},h('b',null,t),h('p',null,e[k])))));}
+    h('div',{class:'exb'},rows.filter(([k])=>e[k]).map(([k,t])=>h('div',{class:'exr'+(k==='v'?' see':'')},h('b',{class:k==='s'?'hk-k':k==='k'?'hk-c':null},t),h('p',null,e[k])))));}
 function poemCard(u,withBtn){
   const tate=h('div',{class:'tate',lang:'ja'});
-  u.lines.forEach((ln,li)=>{
-    [...ln].forEach(ch=>{ if(M[ch]&&M[ch].t==='kan') tate.append(h('button',{class:'kb',onclick:()=>openKanji(ch),'aria-label':'Знак '+ch+': '+M[ch].m},ch)); else tate.append(ch);});
-    if(li<u.lines.length-1) tate.append(h('br'));
+  hlSegLines(u,'j').forEach((segs,li,L)=>{
+    segs.forEach(sg=>{const wrap=sg.c?h('span',{class:HLC[sg.c]}):tate;
+      [...sg.s].forEach(ch=>{ if(M[ch]&&M[ch].t==='kan') wrap.append(h('button',{class:'kb',onclick:()=>openKanji(ch),'aria-label':'Знак '+ch+': '+M[ch].m},ch)); else wrap.append(ch);});
+      if(wrap!==tate)tate.append(wrap);});
+    if(li<L.length-1) tate.append(h('br'));
   });
   return h('div',{class:'poem'},withBtn?SUMI.el(u.id,u.node,'span'):null,tate,
     h('div',{class:'pm'},
       h('div',{class:'who'},u.author,' ',h('small',null,u.year)),
-      h('div',{class:'kana',lang:'ja'},u.kana.join(' / ')),
-      h('div',{class:'cyr'},u.cyr),
-      h('div',{class:'tr'},u.tr),
+      h('div',{class:'kana',lang:'ja'},hlJ(u,'k',' / ')),
+      h('div',{class:'cyr'},hlS(u,'c')),
+      h('div',{class:'tr'},hlS(u,'t')),
       h('div',{class:'imgs'},u.items.filter(g=>PIC[g]).map(g=>h('button',{class:'imgchip',onclick:()=>openKanji(g),'aria-label':g+': '+M[g].m},picImg(g),h('span',{lang:'ja'},g)))),
       h('div',{class:'note'},u.note),
       EXPL[u.id]?explBlock(u.id):null,
@@ -2370,7 +2462,7 @@ function poemCard(u,withBtn){
 }
 function viewPoems(){
   const f=document.createDocumentFragment();
-  f.append(h('p',{class:'how'},'Хокку записаны вертикально, как в оригинале: читаются сверху вниз, столбцы справа налево. Подчёркнутые знаки можно нажать. Переводы — дословные, чтобы видеть, какой иероглиф что значит.'));
+  f.append(h('p',{class:'how'},'Хокку записаны вертикально, как в оригинале: читаются сверху вниз, столбцы справа налево. Подчёркнутые знаки можно нажать. Переводы — дословные, чтобы видеть, какой иероглиф что значит.'),hlLegend());
   UNITS.filter(u=>u.lines).forEach(u=>f.append(poemCard(u,true)));
   return f;
 }
@@ -2388,7 +2480,7 @@ function kigoWord(k){return h('span',{class:'kw',lang:'ja'},[...k].map(ch=>M[ch]
 function koQuotes(n){const out=[];
   KIGO.filter(k=>KIGO_KO[k.k]===n).forEach(k=>k.u.forEach(id=>{const u=UNITS.find(x=>x.id===id);if(!u)return;
     const key=[...k.k].filter(c=>c>'一'||/[ぁ-ん]/.test(c));const ov={w18:'花の香は撞く',basho14:'すみれ草',w7:'軒の栗',w5:'植ゑて立ち去る'};const ln=u.lines.find(l=>ov[id]&&l.includes(ov[id]))||u.lines.find(l=>l.includes(k.k))||u.lines.find(l=>key.some(c=>c>'一'&&l.includes(c)))||u.lines[0];
-    out.push(h('button',{class:'koq',onclick:()=>openUnit(u)},h('small',null,h('b',{lang:'ja'},k.k),' '+k.ru+' · '+u.author),h('span',{lang:'ja'},u.lines.map(l=>h(l===ln?'b':'i',null,l)))));}));
+    out.push(h('button',{class:'koq',onclick:()=>openUnit(u)},h('small',null,h('b',{lang:'ja'},k.k),' '+k.ru+' · '+u.author),h('span',{lang:'ja'},hlSegLines(u,'j').map(segs=>h('i',null,segs.map(s=>s.c?h('span',{class:HLC[s.c]},s.s):s.s))))));}));
   return out.length?h('div',{class:'koqs'},out):null;}
 function koRow(i,cur){const k=KO[i];
   return h('div',{class:'ko'+(cur?' now':''),id:'ko'+k.n},
@@ -2457,7 +2549,7 @@ function kanjiCard(it,isLearn){
       h('div',{class:'blk s'},h('span',{class:'tag'},'Можно сокращать'),cv?cv.sim:null,h('p',null,it.sim)),
       h('div',{class:'blk k'},h('span',{class:'tag'},'Нельзя трогать'),cv?cv.keep:null,h('p',null,it.keep)))
   );
-  if(!isLearn&&it.unit&&it.unit.lines) c.append(h('div',{class:'rd'},'Из урока: ',it.unit.author,' — ',h('span',{class:'jp'},it.unit.lines.join(' '))));
+  if(!isLearn&&it.unit&&it.unit.lines) c.append(h('div',{class:'rd'},'Из урока: ',it.unit.author,' — ',h('span',{class:'jp'},hlJ(it.unit,'j',' '))));
   return c;
 }
 function openKanji(g){
@@ -2633,7 +2725,7 @@ function runSession(queue,meta){
     body.append(h('div',{class:'end'},
       u?h('div',{class:'endart'},SUMI.el(u.id,null),h('div',{class:'bigseal','aria-hidden':'true'},u.node)):h('div',{class:'bigseal','aria-hidden':'true'},meta.free?'筆':'復'),
       h('h2',null,meta.free?'Прописано':u?'Урок пройден':'Повторение готово'),
-      u&&u.lines?h('div',{class:'poemline',lang:'ja'},u.lines.join(' ')):null,
+      u&&u.lines?h('div',{class:'poemline',lang:'ja'},hlJ(u,'j',' ')):null,
       h('div',{class:'stats'},
         h('div',{class:'stat'},h('b',null,'+'+xp),h('small',null,'очков')),
         h('div',{class:'stat'},h('b',null,acc+'%'),h('small',null,'точность')),
@@ -2672,7 +2764,7 @@ function exPhase(ex){
     u&&u.lines?SUMI.el(u.id,u.node,'hero'):null,
     h('span',{class:'learn-tag'},'Часть 1 · Обучение'),
     h('h2',null,u&&u.lines?u.author+' · '+u.title:(u?u.title:'Обучение')),
-    u&&u.lines?h('div',{class:'poemline',lang:'ja'},u.lines.join(' ')):null,
+    u&&u.lines?h('div',{class:'poemline',lang:'ja'},hlJ(u,'j',' ')):null,
     h('p',{class:'tinfo',style:'text-align:left'},'Для каждого из '+ex.n+' '+plural(ex.n,'знака','знаков','знаков')+' — три шага: разберите карточку (смысл, части, порядок черт), обведите по образцу, затем напишите сами на чистом листе. Проверка по памяти будет после всех знаков — так память закрепляется лучше.'),
     ex.skip?h('p',{class:'tinfo',style:'text-align:left'},'Эти знаки вы уже проходили — можно сразу перейти к проверке.'):null)};
   return {learn:true,btnText:'Начать проверку',node:h('div',{class:'phase'},
@@ -2702,7 +2794,7 @@ function exGap(ex,onReady){
   choices.forEach(c=>{const b=h('button',{class:'opt gl','aria-pressed':'false',lang:'ja',onclick:()=>{
     if(b.disabled)return; btns.forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');sel=c;blank.textContent=c;onReady();}},c);btns.push(b);grid.append(b);});
   const line=h('div',{class:'poemline',lang:'ja'},u.jp.slice(0,i),blank,u.jp.slice(i+1));
-  return {node:h('div',null,h('div',{class:'q'},'Впишите пропущенный знак'),line,h('div',{class:'sub'},u.author,' · ',u.tr),grid),
+  return {node:h('div',null,h('div',{class:'q'},'Впишите пропущенный знак'),line,h('div',{class:'sub'},u.author,' · ',hlS(u,'t')),grid),
     ready:()=>sel!=null,
     check:()=>{btns.forEach((b,k)=>{b.disabled=true;if(choices[k]===g)b.classList.add('right');else if(choices[k]===sel)b.classList.add('wrong');});
       return {ok:sel===g,right:g};}};
@@ -2734,7 +2826,7 @@ function exAsm(u,onReady){
       b.classList.add('used'); picked.push(o);
       const a=h('button',{class:'tile',onclick:()=>{if(a.disabled)return;a.remove();b.classList.remove('used');picked.splice(picked.indexOf(o),1);onReady();}},o.c);
       o.a=a; ans.append(a); onReady();}},o.c); o.b=b; bank.append(b);});
-  return {node:h('div',null,h('div',{class:'q'},'Соберите хокку'),h('div',{class:'sub'},u.author,' · ',u.tr),ans,bank),
+  return {node:h('div',null,h('div',{class:'q'},'Соберите хокку'),h('div',{class:'sub'},u.author,' · ',hlS(u,'t')),ans,bank),
     ready:()=>picked.length===u.chunks.length,
     check:()=>{order.forEach(o=>{o.b.disabled=true;if(o.a)o.a.disabled=true;});
       const ok=picked.map(o=>o.c).join('')===u.jp;
