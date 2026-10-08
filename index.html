@@ -436,6 +436,8 @@ h1,h2,h3{text-wrap:balance;margin:0}
 html,body{height:var(--appH,100%)!important}
 #app{height:var(--appH,100dvh)!important}
 .scrdiag{font-size:11px;color:var(--ink2);text-align:center;margin:8px 0 0;opacity:.7}
+.pleft{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pleft .hlleg{flex-direction:column;gap:3px;margin:0;font-size:11px;line-height:1.25}
 </style>
 
 </head>
@@ -2458,13 +2460,12 @@ function poemCard(u,withBtn){
       if(wrap!==tate)tate.append(wrap);});
     if(li<L.length-1) tate.append(h('br'));
   });
-  return h('div',{class:'poem'},withBtn?SUMI.el(u.id,u.node,'span'):null,tate,
+  return h('div',{class:'poem'},withBtn?SUMI.el(u.id,u.node,'span'):null,h('div',{class:'pleft'},tate,hlLegend()),
     h('div',{class:'pm'},
       h('div',{class:'who'},u.author,' ',h('small',null,u.year)),
       h('div',{class:'kana',lang:'ja'},hlJ(u,'k',' / ')),
       h('div',{class:'cyr'},hlS(u,'c')),
       h('div',{class:'tr'},hlS(u,'t')),
-      hlLegend(),
       h('div',{class:'imgs'},u.items.filter(g=>PIC[g]).map(g=>h('button',{class:'imgchip',onclick:()=>openKanji(g),'aria-label':g+': '+M[g].m},picImg(g),h('span',{lang:'ja'},g)))),
       h('div',{class:'note'},u.note),
       EXPL[u.id]?explBlock(u.id):null,
