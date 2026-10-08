@@ -429,6 +429,11 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .pm .kana,.pm .cyr{color:var(--ink)}
 .hlleg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;margin:8px 0 10px}.hlleg span{white-space:nowrap}
 .koq i{color:var(--ink)}
+/* компактные отступы: сверху под статус-бар, снизу у полоски «Домой» */
+#app{padding-top:max(0px,calc(env(safe-area-inset-top,0px) - 12px))!important}
+.top{padding-block:4px 8px!important}
+.tabs{padding-bottom:max(2px,calc(env(safe-area-inset-bottom,0px) - 24px))!important}
+.tabs button{padding:7px 4px 4px!important}
 /* высота под экран: в режиме приложения на iOS 26 окно бывает ниже экрана */
 html,body{height:var(--appH,100%)!important}
 #app{height:var(--appH,100dvh)!important}
