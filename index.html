@@ -429,16 +429,13 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .pm .kana,.pm .cyr{color:var(--ink)}
 .hlleg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;margin:8px 0 10px}.hlleg span{white-space:nowrap}
 .koq i{color:var(--ink)}
-/* разделы — плавающие шарики справа */
-.tabs{position:fixed;right:max(10px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);z-index:15;flex-direction:column;gap:12px;border:0!important;background:none!important;padding:0!important}
-.tabs button{flex:none;width:56px;height:56px;border-radius:50%;padding:0;justify-content:center;gap:0;font-size:9.5px;line-height:1.1;
-  background:rgba(22,23,25,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.45)}
+/* разделы — плавающие шарики внизу */
+.tabs{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:15;flex-direction:row;gap:14px;border:0!important;background:none!important;padding:0!important}
+.tabs button{flex:none;width:58px;height:58px;border-radius:50%;padding:0;justify-content:center;gap:0;font-size:9.5px;line-height:1.1;
+  background:rgba(22,23,25,.74);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.5)}
 .tabs button .tk{font-size:21px;line-height:1.05}
 .tabs button[aria-selected="true"]{background:var(--ai);color:var(--on-ai);border-color:var(--ai)}
-main{padding-right:72px!important;}
-.top{margin-right:-56px}.brand{white-space:nowrap}
-main{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
-@media (min-width:700px){main{padding-right:16px!important}.top{margin-right:0}}
+main{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important}
 </style>
 
 </head>
