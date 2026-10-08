@@ -429,13 +429,10 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .pm .kana,.pm .cyr{color:var(--ink)}
 .hlleg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;margin:8px 0 10px}.hlleg span{white-space:nowrap}
 .koq i{color:var(--ink)}
-/* разделы — плавающие шарики внизу */
-.tabs{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:15;flex-direction:row;gap:14px;border:0!important;background:none!important;padding:0!important}
-.tabs button{flex:none;width:58px;height:58px;border-radius:50%;padding:0;justify-content:center;gap:0;font-size:9.5px;line-height:1.1;
-  background:rgba(22,23,25,.74);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.5)}
-.tabs button .tk{font-size:21px;line-height:1.05}
-.tabs button[aria-selected="true"]{background:var(--ai);color:var(--on-ai);border-color:var(--ai)}
-main{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important}
+/* высота под экран: в режиме приложения на iOS 26 окно бывает ниже экрана */
+html,body{height:var(--appH,100%)!important}
+#app{height:var(--appH,100dvh)!important}
+.scrdiag{font-size:11px;color:var(--ink2);text-align:center;margin:8px 0 0;opacity:.7}
 </style>
 
 </head>
@@ -2256,6 +2253,10 @@ function hlLines(m){// для j/k: «/» — граница строк, возв
 
 </script>
 <script>
+(function(){const fit=()=>{const sa=navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
+  const sh=Math.max(screen.height,screen.width)===Math.max(innerHeight,innerWidth)?innerHeight:(innerWidth<innerHeight?screen.height:screen.width);
+  const h=sa?Math.max(innerHeight,sh):innerHeight;document.documentElement.style.setProperty('--appH',h+'px');window.__scr={sa,sh,ih:innerHeight,h};};
+  fit();addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,300));})();
 (function(){
 'use strict';
 const ALL=[...RAD.map(x=>({...x,t:'rad'})),...KJ.map(x=>({...x,t:'kan'}))];
@@ -2391,6 +2392,7 @@ function viewPath(){
     h('button',{class:'btn ghost',onclick:()=>{S.unlockAll=!S.unlockAll;save();render();}},S.unlockAll?'Вернуть порядок уроков':'Открыть все уроки'),
     h('button',{class:'btn ghost',onclick:openBackup},'Резервная копия'),
     reset));
+  const sc=window.__scr||{};f.append(h('p',{class:'scrdiag'},'Экран '+screen.width+'×'+screen.height+' · окно '+innerWidth+'×'+innerHeight+(sc.sa?' · приложение, высота '+sc.h:' · браузер')));
   return f;
 }
 function openBackup(){
