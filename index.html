@@ -2162,6 +2162,10 @@ const KIGO_KO={
  '雪':61,'枯野':58,'初しぐれ':53,'年の暮':72,'冬の日':64,'千鳥':62
 };
 
+// Порядок хокку по возрастанию сложности: средний счёт черт всех иероглифов стиха (KanjiVG)
+const ORDER=["basho11","basho7","w17","w5","buson3","w7","buson1","basho8","w26","basho1","w2","w6","basho17","basho14","basho18","w4","w25","basho20","kikaku","basho4","buson2","basho9","issa2","basho13","w21","w23","basho2","basho10","basho16","basho12","issa1","w8","w22","w14","w9","ransetsu","w24","basho15","basho6","w10","w16","basho5","w20","basho3","basho19","w13","issa3","w18","w3","w1","w19","w12","chiyo1","shiki2","shiki1","w15","w11"];
+const DIFF={"basho11":5.7,"basho7":6,"w17":6.2,"w5":6.4,"buson3":6.4,"w7":6.6,"buson1":6.7,"basho8":7.1,"w26":7.3,"basho1":7.5,"w2":7.5,"w6":7.6,"basho17":7.8,"basho14":7.8,"basho18":7.9,"w4":8,"w25":8,"basho20":8,"kikaku":8,"basho4":8.2,"buson2":8.3,"basho9":8.4,"issa2":8.5,"basho13":8.6,"w21":8.8,"w23":8.8,"basho2":8.8,"basho10":8.9,"basho16":9,"basho12":9,"issa1":9.2,"w8":9.3,"w22":9.3,"w14":9.5,"w9":9.7,"ransetsu":9.8,"w24":9.8,"basho15":10,"basho6":10,"w10":10,"w16":10.2,"basho5":10.3,"w20":10.3,"basho3":10.4,"basho19":10.4,"w13":10.5,"issa3":10.6,"w18":10.7,"w3":11,"w1":11.2,"w19":11.2,"w12":11.2,"chiyo1":11.2,"shiki2":11.3,"shiki1":11.3,"w15":12,"w11":14.8};
+
 
 </script>
 <script>
@@ -2170,6 +2174,17 @@ const KIGO_KO={
 const ALL=[...RAD.map(x=>({...x,t:'rad'})),...KJ.map(x=>({...x,t:'kan'}))];
 ALL.forEach(x=>{if(!x.s&&typeof STK!=='undefined'&&STK[x.g])x.s=STK[x.g].d.length;});
 const M={}; ALL.forEach(it=>M[it.g]=it);
+(function(){ // хокку по возрастанию сложности; новые знаки урока — те, что встретились впервые
+  if(typeof ORDER==='undefined')return;
+  const by={};UNITS.forEach(u=>by[u.id]=u);
+  const first=UNITS.filter(u=>!u.lines), poems=ORDER.map(id=>by[id]).filter(Boolean);
+  UNITS.filter(u=>u.lines&&!ORDER.includes(u.id)).forEach(u=>poems.push(u));
+  const seen=new Set(first.flatMap(u=>u.items));
+  poems.forEach(u=>{const it=[...new Set([...u.lines.join('')].filter(c=>M[c]&&M[c].t==='kan'&&!seen.has(c)))];
+    if(it.length){it.forEach(c=>seen.add(c));u.items=it;} else u.items=u.items.filter(c=>M[c]);});
+  const rest=ALL.filter(x=>x.t==='kan'&&!seen.has(x.g)).map(x=>x.g);
+  if(rest.length&&poems.length) poems[poems.length-1].items.push(...rest);
+  UNITS.length=0;first.concat(poems).forEach(u=>UNITS.push(u));})();
 (function(){ // повторение после каждых 5 уроков
   const out=[];let batch=[],k=0;
   UNITS.forEach(u=>{out.push(u);batch.push(u);
