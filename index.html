@@ -427,7 +427,7 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .hk-k{color:#8FD08A!important}.hk-1{color:#FFFFFF!important}.hk-c{color:#F0654A!important;font-weight:700}.hk-2{color:#E8CF9C!important}
 .tate .hk-k .kb,.tate .hk-1 .kb,.tate .hk-2 .kb,.tate .hk-c .kb{color:inherit;text-decoration-color:currentColor}
 .pm .kana,.pm .cyr{color:var(--ink)}
-.hlleg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;margin:8px 0 10px}.hlleg span{white-space:nowrap}
+.hlleg{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:11.5px;margin:6px 0 8px;opacity:.9}.hlleg span{white-space:nowrap}
 .koq i{color:var(--ink)}
 /* компактные отступы: сверху под статус-бар, снизу у полоски «Домой» */
 .tabs{padding-bottom:max(2px,calc(env(safe-area-inset-bottom,0px) - 24px))!important}
@@ -2372,7 +2372,6 @@ function viewPath(){
     h('div',{class:'t'},h('b',null,'Цель дня: ',S.todayXp,' / ',S.goal,' очков'),
       h('small',null, due.length? 'К повторению: '+due.length+' '+plural(due.length,'знак','знака','знаков') : (Object.keys(S.srs).length?'Повторять пока нечего — учите новое':'Начните с ключей: из них собраны все знаки'))),
     due.length? h('button',{class:'btn primary',onclick:startReview},'Повторить'):null));
-  f.append(hlLegend());
   const p=h('div',{class:'path'});
   const offs=[0,40,60,40,0,-40,-60,-40];
   let curFound=false;
@@ -2418,7 +2417,7 @@ function openUnit(u){
   const rev=u.kind==='review';
   body.append(SUMI.el(rev?'rad':u.id,u.node,'hero'),h('div',{class:'tag'},rev?'Повторение':u.author?(u.author+' · '+u.year):'Основы'), h('h2',{style:'margin:2px 0 12px'},u.title));
   if(rev) body.append(h('p',{class:'how',style:'margin-top:0'},'10 случайных знаков из пяти прошлых уроков: '+u.src.map(id=>UNITS.find(x=>x.id===id).title).join(', ')+'. Каждый раз набор новый. Выбор из 4 и рисование по названию, пять сердец.'));
-  else if(u.lines) body.append(hlLegend(),poemCard(u,false));
+  else if(u.lines) body.append(poemCard(u,false));
   else body.append(h('p',{class:'how',style:'margin-top:0'},'Ключи — повторяющиеся части знаков. Именно их каллиграф сокращает в первую очередь: они предсказуемы, и глаз узнаёт их по силуэту. Сохранять нужно то, что отличает знак от соседей.'));
   body.append(h('div',{class:'sec-h'},rev?'Знаки этих уроков':'Знаки урока'));
   body.append(h('div',{class:'kgrid'},u.items.map(g=>ktile(M[g]))));
@@ -2465,6 +2464,7 @@ function poemCard(u,withBtn){
       h('div',{class:'kana',lang:'ja'},hlJ(u,'k',' / ')),
       h('div',{class:'cyr'},hlS(u,'c')),
       h('div',{class:'tr'},hlS(u,'t')),
+      hlLegend(),
       h('div',{class:'imgs'},u.items.filter(g=>PIC[g]).map(g=>h('button',{class:'imgchip',onclick:()=>openKanji(g),'aria-label':g+': '+M[g].m},picImg(g),h('span',{lang:'ja'},g)))),
       h('div',{class:'note'},u.note),
       EXPL[u.id]?explBlock(u.id):null,
@@ -2475,7 +2475,7 @@ function poemCard(u,withBtn){
 }
 function viewPoems(){
   const f=document.createDocumentFragment();
-  f.append(h('p',{class:'how'},'Хокку записаны вертикально, как в оригинале: читаются сверху вниз, столбцы справа налево. Подчёркнутые знаки можно нажать. Переводы — дословные, чтобы видеть, какой иероглиф что значит.'),hlLegend());
+  f.append(h('p',{class:'how'},'Хокку записаны вертикально, как в оригинале: читаются сверху вниз, столбцы справа налево. Подчёркнутые знаки можно нажать. Переводы — дословные, чтобы видеть, какой иероглиф что значит.'));
   UNITS.filter(u=>u.lines).forEach(u=>f.append(poemCard(u,true)));
   return f;
 }
@@ -2507,7 +2507,6 @@ function viewKigo(){
   if(!kigoSeason)kigoSeason=nsk.s;
   f.append(h('div',{class:'how'},h('b',{lang:'ja'},'季語 '),h('b',null,'Киго — сезонные слова. '),
     'Японский год делится не на 4 части, а мельче: 4 сезона → 24 «сэкки» (節気, по 15 дней) → 72 «ко» (候, микросезоны по 5 дней). У каждого ко есть имя-картинка: «прилетают ласточки», «гнилая трава становится светлячками». Почти в каждом имени спрятано киго — слово, которое поэт ставит в хокку, чтобы читатель сразу понял время года. Под микросезонами — строки из хокку с их сезонными словами; нажмите, чтобы открыть стих. Счёт идёт по старому календарю, поэтому весна начинается 4 февраля, а осень — 8 августа.'));
-  f.append(hlLegend());
   const ns=seaOf(nsk.s);
   f.append(h('button',{class:'konow',style:`--sc:${ns.col}`,onclick:()=>{kigoSeason=nsk.s;render();setTimeout(()=>{const el=document.getElementById('ko'+nk.n);el&&el.scrollIntoView({block:'center',behavior:'smooth'});},60);}},
     h('small',null,'Сейчас · '+ns.ru.toLowerCase()+' · '+nsk.k+' «'+nsk.ru+'» · ко '+nk.n+' из 72'),
