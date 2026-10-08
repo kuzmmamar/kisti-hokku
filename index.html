@@ -2492,6 +2492,10 @@ function koNow(){const t=new Date();t.setHours(0,0,0,0);let best=71,bd=-1;
   KO.forEach((k,i)=>{let s=koStart(k.d,t.getFullYear());if(s>t)s=koStart(k.d,t.getFullYear()-1);if(s>bd){bd=s;best=i;}});return best;}
 const seaOf=id=>KIGO_SEASONS.find(x=>x.id===id);
 let kigoSeason=null;
+let kigoDay=new Date().toDateString();
+function kigoDayCheck(){const d=new Date().toDateString();if(d!==kigoDay){kigoDay=d;if(tab==='kigo'&&!document.querySelector('.scrim,.lesson'))render();}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)kigoDayCheck();});
+addEventListener('focus',kigoDayCheck);setInterval(kigoDayCheck,60000);
 function kigoWord(k){return h('span',{class:'kw',lang:'ja'},[...k].map(ch=>M[ch]&&M[ch].t==='kan'?h('button',{class:'kb',onclick:e=>{e.stopPropagation();openKanji(ch);},'aria-label':'Знак '+ch},ch):ch));}
 function koQuotes(n){const out=[];
   KIGO.filter(k=>KIGO_KO[k.k]===n).forEach(k=>k.u.forEach(id=>{const u=UNITS.find(x=>x.id===id);if(!u)return;
@@ -2507,25 +2511,27 @@ function koRow(i,cur){const k=KO[i];
     h('button',{class:'kspk','aria-label':'Слушать','onclick':()=>speak(k.r)},'♪'));}
 function viewKigo(){
   const f=document.createDocumentFragment();const now=koNow(),nk=KO[now],nsk=SEKKI[nk.sk];
-  if(!kigoSeason)kigoSeason=nsk.s;
+  if(!kigoSeason)kigoSeason='all';
   f.append(h('div',{class:'how'},h('b',{lang:'ja'},'季語 '),h('b',null,'Киго — сезонные слова. '),
     'Японский год делится не на 4 части, а мельче: 4 сезона → 24 «сэкки» (節気, по 15 дней) → 72 «ко» (候, микросезоны по 5 дней). У каждого ко есть имя-картинка: «прилетают ласточки», «гнилая трава становится светлячками». Почти в каждом имени спрятано киго — слово, которое поэт ставит в хокку, чтобы читатель сразу понял время года. Под микросезонами — строки из хокку с их сезонными словами; нажмите, чтобы открыть стих. Счёт идёт по старому календарю, поэтому весна начинается 4 февраля, а осень — 8 августа.'));
   const ns=seaOf(nsk.s);
-  f.append(h('button',{class:'konow',style:`--sc:${ns.col}`,onclick:()=>{kigoSeason=nsk.s;render();setTimeout(()=>{const el=document.getElementById('ko'+nk.n);el&&el.scrollIntoView({block:'center',behavior:'smooth'});},60);}},
+  f.append(h('button',{class:'konow',style:`--sc:${ns.col}`,onclick:()=>{render();setTimeout(()=>{const el=document.getElementById('ko'+nk.n);el&&el.scrollIntoView({block:'center',behavior:'smooth'});},60);}},
     h('small',null,'Сейчас · '+ns.ru.toLowerCase()+' · '+nsk.k+' «'+nsk.ru+'» · ко '+nk.n+' из 72'),
     h('b',{lang:'ja'},nk.k),h('span',{lang:'ja',class:'kor'},nk.r),h('span',{class:'koro'},nk.ro),h('span',null,nk.ru+' · '+koRange(now)),
     h('small',null,'Дальше: '+KO[(now+1)%72].ru.toLowerCase()+' ('+KO[(now+1)%72].k+')')));
   f.append(h('div',{class:'kgf',role:'tablist','aria-label':'Сезон'},
     [{id:'all',jp:'四季',ru:'Все'}].concat(KIGO_SEASONS).map(s=>h('button',{class:'kgc'+(kigoSeason===s.id?' on':''),style:s.col?`--sc:${s.col}`:'','aria-selected':String(kigoSeason===s.id),
       onclick:()=>{kigoSeason=s.id;render();}},h('span',{lang:'ja'},s.jp),s.ru))));
-  KIGO_SEASONS.filter(s=>kigoSeason==='all'||kigoSeason===s.id).forEach(s=>{
-        f.append(h('div',{class:'kgs',style:`--sc:${s.col}`},h('b',{lang:'ja'},s.jp),h('div',null,h('h3',null,s.ru),h('small',{class:'kgsm'},'6 сэкки · 18 микросезонов'),h('p',null,s.note))));
-    SEKKI.forEach((sk,si)=>{if(sk.s!==s.id)return;
-      const box=h('div',{class:'sekki',style:`--sc:${s.col}`});
-      box.append(h('div',{class:'skh'},h('b',{lang:'ja'},sk.k),h('div',null,h('span',{lang:'ja'},sk.r),h('strong',null,sk.ru),h('small',null,'с '+sk.d[1]+' '+MON[sk.d[0]-1]+' · сэкки '+(si+1)+' из 24'))));
-      for(let j=0;j<3;j++){const i=si*3+j;box.append(koRow(i,i===now));}
-      f.append(box);});
-  });
+  // список идёт по кругу от текущего микросезона: сегодняшний ко первым
+  let curSea=null,curSk=null,box=null;
+  for(let j=0;j<72;j++){const i=(now+j)%72,k=KO[i],sk=SEKKI[k.sk],s=seaOf(sk.s);
+    if(kigoSeason!=='all'&&kigoSeason!==s.id)continue;
+    if(s.id!==curSea){curSea=s.id;curSk=null;
+      f.append(h('div',{class:'kgs',style:`--sc:${s.col}`},h('b',{lang:'ja'},s.jp),h('div',null,h('h3',null,s.ru+(j===0?' · сейчас':'')),h('small',{class:'kgsm'},'6 сэкки · 18 микросезонов'),h('p',null,s.note))));}
+    if(k.sk!==curSk){curSk=k.sk;box=h('div',{class:'sekki',style:`--sc:${s.col}`});
+      box.append(h('div',{class:'skh'},h('b',{lang:'ja'},sk.k),h('div',null,h('span',{lang:'ja'},sk.r),h('strong',null,sk.ru),h('small',null,'с '+sk.d[1]+' '+MON[sk.d[0]-1]+' · сэкки '+(k.sk+1)+' из 24'))));
+      f.append(box);}
+    box.append(koRow(i,i===now));}
   return f;
 }
 // ---------- kanji ----------
