@@ -438,6 +438,8 @@ html,body{height:var(--appH,100%)!important}
 .scrdiag{font-size:11px;color:var(--ink2);text-align:center;margin:8px 0 0;opacity:.7}
 .pleft{display:flex;flex-direction:column;gap:10px;min-width:0}
 .pleft .hlleg{flex-direction:column;gap:3px;margin:0;font-size:11px;line-height:1.25}
+.pbtns{display:flex;flex-direction:column;gap:8px}
+.pbtns .btn{padding:8px 10px;font-size:13.5px;width:100%;white-space:nowrap}
 </style>
 
 </head>
@@ -2460,7 +2462,11 @@ function poemCard(u,withBtn){
       if(wrap!==tate)tate.append(wrap);});
     if(li<L.length-1) tate.append(h('br'));
   });
-  return h('div',{class:'poem'},withBtn?SUMI.el(u.id,u.node,'span'):null,h('div',{class:'pleft'},tate,hlLegend()),
+  return h('div',{class:'poem'},withBtn?SUMI.el(u.id,u.node,'span'):null,h('div',{class:'pleft'},tate,hlLegend(),
+      h('div',{class:'pbtns'},
+        h('button',{class:'btn ghost',onclick:()=>speak(u.kana.join('、'))},'Слушать'),
+        BIO[u.author]?h('button',{class:'btn ghost',onclick:()=>openBio(u.author)},'Об авторе'):null,
+        withBtn&&isUnlocked(u)?h('button',{class:'btn primary',onclick:()=>startLesson(u)},S.done[u.id]?'Повторить':'Урок'):null)),
     h('div',{class:'pm'},
       h('div',{class:'who'},u.author,' ',h('small',null,u.year)),
       h('div',{class:'kana',lang:'ja'},hlJ(u,'k',' / ')),
@@ -2468,11 +2474,7 @@ function poemCard(u,withBtn){
       h('div',{class:'tr'},hlS(u,'t')),
       h('div',{class:'imgs'},u.items.filter(g=>PIC[g]).map(g=>h('button',{class:'imgchip',onclick:()=>openKanji(g),'aria-label':g+': '+M[g].m},picImg(g),h('span',{lang:'ja'},g)))),
       h('div',{class:'note'},u.note),
-      EXPL[u.id]?explBlock(u.id):null,
-      h('div',{class:'row'},
-        h('button',{class:'btn ghost',onclick:()=>speak(u.kana.join('、'))},'Слушать'),
-        BIO[u.author]?h('button',{class:'btn ghost',onclick:()=>openBio(u.author)},'Об авторе'):null,
-        withBtn&&isUnlocked(u)?h('button',{class:'btn primary',onclick:()=>startLesson(u)},S.done[u.id]?'Повторить урок':'Урок'):null)));
+      EXPL[u.id]?explBlock(u.id):null));
 }
 function viewPoems(){
   const f=document.createDocumentFragment();
