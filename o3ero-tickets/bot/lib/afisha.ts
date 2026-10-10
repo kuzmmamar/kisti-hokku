@@ -136,6 +136,56 @@ export function monthParam(when?: string): string {
   return when;
 }
 
+/** Search current month and the next one when month is omitted. */
+export async function findShowSessions(opts: {
+  query: string;
+  month?: string;
+  date?: string;
+  onlyAvailable?: boolean;
+}): Promise<AfishaResult<{ months: string[]; sessions: ScheduleSession[] }>> {
+  const months = opts.month
+    ? [monthParam(opts.month)]
+    : opts.date
+      ? [monthParam(opts.date)]
+      : (() => {
+          const d = new Date();
+          const m1 = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+          const n = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+          const m2 = `${n.getUTCFullYear()}-${String(n.getUTCMonth() + 1).padStart(2, "0")}`;
+          return [m1, m2];
+        })();
+
+  const all: ScheduleSession[] = [];
+  for (const month of months) {
+    const page = await listSchedule({
+      month,
+      query: opts.query,
+      onlyAvailable: opts.onlyAvailable,
+    });
+    if (!page.ok) return page;
+    all.push(...page.data.sessions);
+  }
+
+  let sessions = all;
+  if (opts.date) {
+    const day = opts.date.slice(0, 10);
+    sessions = sessions.filter((s) => s.time.startsWith(day));
+  }
+  sessions.sort((a, b) => a.time.localeCompare(b.time));
+  return { ok: true, status: 200, data: { months, sessions } };
+}
+
+export function pickBestSession(
+  sessions: ScheduleSession[],
+  opts?: { preferAvailable?: boolean },
+): ScheduleSession | undefined {
+  if (sessions.length === 0) return undefined;
+  const prefer = opts?.preferAvailable !== false;
+  const available = sessions.filter((s) => s.hasAvailablePlaces);
+  const pool = prefer && available.length > 0 ? available : sessions;
+  return pool[0];
+}
+
 export async function listSchedule(opts: {
   month?: string;
   onlyAvailable?: boolean;
