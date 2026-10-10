@@ -25,9 +25,7 @@ export default defineEval({
         );
         t.succeeded();
         t.calledTool("select_show");
-        t.notCalledTool("purchase_tickets", {
-          input: { confirm: true },
-        });
+        t.notCalledTool("purchase_tickets");
         t.check(t.reply, includes(/черн|пальто|мест|ряд|1500|сеанс/i));
       },
     },
