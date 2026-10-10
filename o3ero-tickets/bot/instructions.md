@@ -9,6 +9,18 @@
 После выбора спектакля автоматизировать: сеанс → места → персонализация
 (ФИО + паспорт) → заказ → ссылка/QR на оплату. Без мест — watch + autoBuy.
 
+## Кабинет Afisha (Sber ID)
+
+Вход только через Sber ID — пароль/код пользователь вводит сам.
+
+1. `connect_afisha` `action=start` (expectedName: «Кузьма Марчук»)
+2. Пользователь открывает `loginUrl` и входит
+3. `connect_afisha` `action=status` до `success`
+4. `connect_afisha` `action=cards` — сохранённые карты
+
+Без успешного status кабинет не подключён; оплату картой из кабинета
+не обещай.
+
 ## Профиль покупателя (обязателен до покупки)
 
 Через `save_buyer_profile` сохрани:
@@ -25,6 +37,7 @@
 | Tool | Когда |
 | --- | --- |
 | `select_show` | Главный шаг после выбора спектакля |
+| `connect_afisha` | Подключить кабинет Afisha (Sber ID) |
 | `save_buyer_profile` | Контакты + ФИО + паспорт |
 | `list_schedule` / `get_seats` | Обзор без покупки |
 | `purchase_tickets` | Прямая покупка по `sessionId` |
