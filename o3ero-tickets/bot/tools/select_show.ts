@@ -8,7 +8,12 @@ import {
   purchaseTickets,
   type ScheduleSession,
 } from "../lib/afisha.js";
-import { PROFILE_KEY, type BuyerProfile } from "../lib/buyer.js";
+import {
+  PROFILE_KEY,
+  profileReadyForPurchase,
+  toTicketPerson,
+  type BuyerProfile,
+} from "../lib/buyer.js";
 import { WATCHES_KEY, newWatchId, type WatchTarget } from "../lib/watch.js";
 
 function asJson(value: unknown): JsonValue {
@@ -34,8 +39,6 @@ export default defineTool({
       .optional(),
     maxPrice: z.number().positive().optional(),
     paymentType: z.enum(["QrPay", "SberPay", "Card"]).optional(),
-    phone: z.string().min(10).max(32).optional(),
-    email: z.string().email().optional(),
     watchIfUnavailable: z.boolean().default(true),
     autoBuy: z.boolean().default(true),
     confirm: z.boolean().default(false),
@@ -43,8 +46,6 @@ export default defineTool({
   async execute(input, ctx) {
     const kv = ctx.host.kv;
     const stored = (await ctx.host.kv.get(PROFILE_KEY)) as BuyerProfile | undefined;
-    const phone = input.phone ?? stored?.phone;
-    const email = input.email ?? stored?.email;
     const paymentType = input.paymentType ?? stored?.preferredPaymentType ?? "QrPay";
 
     const resolved = await resolveSession(input);
@@ -81,22 +82,27 @@ export default defineTool({
       };
     }
 
-    if (input.confirm && (!phone || !email)) {
-      return {
-        ok: false as const,
-        error: "Для покупки нужны phone и email (save_buyer_profile).",
-        selected,
-        alternatives,
-      };
+    if (input.confirm) {
+      const missing = profileReadyForPurchase(stored);
+      if (missing) {
+        return {
+          ok: false as const,
+          error: missing,
+          selected,
+          alternatives,
+        };
+      }
     }
 
+    const person = stored ? toTicketPerson(stored) : undefined;
     const result = await purchaseTickets({
       sessionId: selected.id,
       quantity: input.seats?.length ?? input.quantity,
       seats: input.seats,
       maxPrice: input.maxPrice,
-      phone: phone ?? "",
-      email: email ?? "",
+      phone: stored?.phone ?? "",
+      email: stored?.email ?? "",
+      person,
       paymentType,
       dryRun: !input.confirm,
     });

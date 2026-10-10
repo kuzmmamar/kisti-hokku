@@ -1,5 +1,7 @@
 /** Afisha widget API client for театр «Озеро» (o3ero.ru). */
 
+import type { TicketPerson } from "./buyer.js";
+
 export const WIDGET_KEY =
   process.env.O3ERO_AFISHA_WIDGET_KEY ??
   "8c8b93e0-bf87-4821-ada4-ed21f4a52197";
@@ -378,6 +380,8 @@ export async function purchaseTickets(opts: {
   maxPrice?: number;
   phone: string;
   email: string;
+  /** FIO + passport for ticket personalization */
+  person?: TicketPerson;
   paymentType: "QrPay" | "SberPay" | "Card";
   widgetCloseUrl?: string;
   dryRun?: boolean;
@@ -392,6 +396,7 @@ export async function purchaseTickets(opts: {
     orderSum?: number;
     paymentType?: string;
     payment?: Json;
+    personalized?: boolean;
     note: string;
   }>
 > {
@@ -424,7 +429,21 @@ export async function purchaseTickets(opts: {
         sessionId: opts.sessionId,
         seats: seatSummary,
         estimatedTicketSum,
-        note: "dry_run: места выбраны, заказ не создан. Повторите с confirm=true.",
+        personalized: Boolean(opts.person),
+        note: opts.person
+          ? "dry_run: места + ФИО/паспорт готовы. Повторите с confirm=true."
+          : "dry_run: места выбраны. Для покупки нужны ФИО и паспорт в профиле.",
+      },
+    };
+  }
+
+  if (!opts.person) {
+    return {
+      ok: false,
+      status: 400,
+      error: {
+        message:
+          "Нужны имя, фамилия и паспорт (save_buyer_profile) перед confirm=true.",
       },
     };
   }
@@ -449,12 +468,39 @@ export async function purchaseTickets(opts: {
     ticketTypeTitle: p.ticketTypeTitle,
   }));
 
-  const ticketsResult = await request<{ id: string; totalPrice?: number }>(
-    "POST",
-    `/carts/${cartId}/ticket`,
-    ticketBodies,
-  );
+  const ticketsResult = await request<{
+    id: string;
+    totalPrice?: number;
+    tickets?: Array<{ id: string }>;
+  }>("POST", `/carts/${cartId}/ticket`, ticketBodies);
   if (!ticketsResult.ok) return ticketsResult;
+
+  const cartTickets = ticketsResult.data.tickets ?? [];
+  for (const ticket of cartTickets) {
+    const personResult = await request(
+      "PUT",
+      `/carts/${cartId}/tickets/${ticket.id}/person`,
+      opts.person,
+    );
+    if (!personResult.ok) {
+      // try create path used by widget
+      const createPerson = await request("POST", `/carts/${cartId}/tickets/person`, {
+        ticketId: ticket.id,
+        person: opts.person,
+      });
+      if (!createPerson.ok) {
+        return {
+          ok: false,
+          status: createPerson.status,
+          error: {
+            message: "Не удалось записать ФИО/паспорт на билет",
+            put: personResult.error,
+            post: createPerson.error,
+          },
+        };
+      }
+    }
+  }
 
   const orderResult = await request<{
     order?: { id: string; sum?: number };
@@ -471,10 +517,15 @@ export async function purchaseTickets(opts: {
     };
   }
 
+  const contactsBody: Record<string, string> = {
+    phone: opts.phone,
+    email: opts.email,
+    name: opts.person.name,
+  };
   const contactsResult = await request(
     "PATCH",
     `/orders/${orderId}/contacts`,
-    { phone: opts.phone, email: opts.email },
+    contactsBody,
   );
   if (!contactsResult.ok) {
     await request("DELETE", `/orders/${orderId}`);
@@ -506,8 +557,9 @@ export async function purchaseTickets(opts: {
       orderSum: orderResult.data.order?.sum,
       paymentType: opts.paymentType,
       payment: paymentResult.ok ? paymentResult.data : { error: paymentResult.error },
+      personalized: true,
       note: paymentResult.ok
-        ? "Заказ создан. Откройте ссылку/QR из payment и завершите оплату."
+        ? "Заказ создан с ФИО/паспортом. Откройте payment (ссылка/QR) и завершите оплату."
         : "Заказ создан, но payment API вернул ошибку — проверьте orderId / cancel_order.",
     },
   };

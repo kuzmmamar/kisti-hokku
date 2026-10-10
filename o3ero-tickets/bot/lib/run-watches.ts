@@ -1,6 +1,11 @@
 import type { HostKvApi, JsonValue } from "@cursor/bdk";
 import { findShowSessions, pickBestSession, purchaseTickets } from "./afisha.js";
-import { PROFILE_KEY, type BuyerProfile } from "./buyer.js";
+import {
+  PROFILE_KEY,
+  profileReadyForPurchase,
+  toTicketPerson,
+  type BuyerProfile,
+} from "./buyer.js";
 import { WATCHES_KEY, type WatchTarget } from "./watch.js";
 
 export type WatchRunResult = {
@@ -76,7 +81,8 @@ export async function runWatches(kv: HostKvApi): Promise<WatchRunResult> {
         continue;
       }
 
-      if (!profile?.phone || !profile?.email) {
+      const missing = profileReadyForPurchase(profile);
+      if (missing) {
         waiting.push({ watchId: watch.id, status: "missing_buyer_profile" });
         next.push({
           ...watch,
@@ -91,9 +97,10 @@ export async function runWatches(kv: HostKvApi): Promise<WatchRunResult> {
         sessionId: sessionId!,
         quantity: watch.quantity,
         maxPrice: watch.maxPrice,
-        phone: profile.phone,
-        email: profile.email,
-        paymentType: watch.paymentType ?? profile.preferredPaymentType ?? "QrPay",
+        phone: profile!.phone,
+        email: profile!.email,
+        person: toTicketPerson(profile!),
+        paymentType: watch.paymentType ?? profile!.preferredPaymentType ?? "QrPay",
         dryRun: false,
       });
 

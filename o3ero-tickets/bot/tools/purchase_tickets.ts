@@ -1,16 +1,20 @@
 import { prompt } from "@cursor/bdk";
+import type { JsonValue } from "@cursor/bdk";
 import { defineTool } from "@cursor/bdk/tools";
 import { z } from "zod";
 import { purchaseTickets } from "../lib/afisha.js";
-import { PROFILE_KEY, type BuyerProfile } from "../lib/buyer.js";
-
+import {
+  PROFILE_KEY,
+  profileReadyForPurchase,
+  toTicketPerson,
+  type BuyerProfile,
+} from "../lib/buyer.js";
 
 export default defineTool({
   description: prompt`
-    Купить билеты театра «Озеро» через официальный Afisha widget API:
-    корзина → места → заказ → контакты → платёжная сессия.
-    Без confirm=true только dry-run (выбор мест, без удержания).
-    Карточные данные не принимаются — оплата по ссылке/QR от Afisha.
+    Купить билеты театра «Озеро» через Afisha:
+    корзина → места → ФИО/паспорт на билет → заказ → оплата.
+    Без confirm=true только dry-run. Карты не принимаются.
   `,
   effect: (input) => (input.confirm ? "write" : "read"),
   inputSchema: z.object({
@@ -24,54 +28,49 @@ export default defineTool({
         }),
       )
       .max(10)
-      .optional()
-      .describe("Конкретные места; иначе самые дешёвые доступные"),
-    maxPrice: z.number().positive().optional().describe("Макс. цена одного места"),
+      .optional(),
+    maxPrice: z.number().positive().optional(),
     paymentType: z.enum(["QrPay", "SberPay", "Card"]).optional(),
-    phone: z.string().min(10).max(32).optional(),
-    email: z.string().email().optional(),
-    confirm: z
-      .boolean()
-      .default(false)
-      .describe("true — создать заказ и платёж; false — только dry-run"),
+    confirm: z.boolean().default(false),
   }),
   async execute(input, ctx) {
     const stored = (await ctx.host.kv.get(PROFILE_KEY)) as BuyerProfile | undefined;
-    const phone = input.phone ?? stored?.phone;
-    const email = input.email ?? stored?.email;
     const paymentType = input.paymentType ?? stored?.preferredPaymentType ?? "QrPay";
 
-    if (input.confirm && (!phone || !email)) {
-      return {
-        ok: false as const,
-        error: "Нужны phone и email (аргументы или save_buyer_profile).",
-      };
+    if (input.confirm) {
+      const missing = profileReadyForPurchase(stored);
+      if (missing) return { ok: false as const, error: missing };
     }
 
+    const person = stored ? toTicketPerson(stored) : undefined;
     const result = await purchaseTickets({
       sessionId: input.sessionId,
       quantity: input.seats?.length ?? input.quantity,
       seats: input.seats,
       maxPrice: input.maxPrice,
-      phone: phone ?? "",
-      email: email ?? "",
+      phone: stored?.phone ?? "",
+      email: stored?.email ?? "",
+      person,
       paymentType,
       dryRun: !input.confirm,
     });
 
     if (!result.ok) {
-      return { ok: false as const, status: result.status, error: result.error };
+      return { ok: false as const, status: result.status, error: result.error as JsonValue };
     }
 
     if (input.confirm && result.data.orderId) {
-      await ctx.host.kv.put(`o3ero:last_order:${ctx.session.id}`, {
-        orderId: result.data.orderId,
-        cartId: result.data.cartId ?? null,
-        sessionId: result.data.sessionId,
-        at: new Date().toISOString(),
-      });
+      await ctx.host.kv.put(
+        `o3ero:last_order:${ctx.session.id}`,
+        {
+          orderId: result.data.orderId,
+          cartId: result.data.cartId ?? null,
+          sessionId: result.data.sessionId,
+          at: new Date().toISOString(),
+        } as unknown as JsonValue,
+      );
     }
 
-    return { ok: true as const, ...result.data };
+    return { ok: true as const, ...result.data, payment: result.data.payment as JsonValue };
   },
 });
