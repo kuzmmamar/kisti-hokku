@@ -73,7 +73,7 @@ body.focus .stage{position:fixed;inset:0;z-index:15;background:var(--bg);box-siz
 body.focus .modeSw{display:grid}
 .again{display:none;position:absolute;top:max(10px,env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));z-index:2;min-height:40px;padding:0 16px;border-radius:20px;font-size:14.5px}
 body.focus .again{display:block}
-body.sealed #bAgain,body.sealed #bClear,body.sealed .sealBtn,body.sealed .stampHint{display:none!important}
+body.sealed #bAgain,body.sealed #bClear,body.sealed .seals,body.sealed .stampHint{display:none!important}
 body.sealed .bar{grid-template-columns:1fr}
 body.sealed .sheet{cursor:default}
 body.focus .sheet{width:min(100cqw,100cqh);height:min(100cqh,calc(min(100cqw,100cqh)*1.348));aspect-ratio:auto;border-radius:0;box-shadow:none}
@@ -84,15 +84,10 @@ body.focus .close{display:block}
 body.focus .close.undo{display:none}
 body.focus.free .close.undo{display:none}
 body.focus #bClose{display:none}
-.sealBtn{display:none;position:absolute;top:max(8px,env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));z-index:2;width:46px;height:46px;min-height:0;padding:0;border:0;background:transparent;border-radius:3px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+.seals{display:none;position:absolute;top:max(8px,env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));z-index:2;gap:10px}
+body.focus .seals{display:flex}
+.sealBtn{display:block;width:46px;height:46px;min-height:0;padding:0;border:0;background:transparent;border-radius:3px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
 .sealBtn svg{display:block;width:100%;height:100%}
-.sealPick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.sealPick button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;min-height:0;text-align:center}
-.sealPick button svg{width:64px;height:64px;display:block}
-.sealPick button b{font-family:var(--display);font-size:16px}
-.sealPick button small{font-size:12px;color:var(--muted)}
-.sealPick button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
-body.focus .sealBtn{display:block}
 .sealBtn.press{transform:scale(.88);transition:transform .12s}
 .sealBtn.armed{outline:3px solid #B2221A;outline-offset:3px}
 .stampHint{position:absolute;top:calc(max(8px,env(safe-area-inset-top,0px)) + 54px);left:50%;transform:translateX(-50%);z-index:2;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;white-space:nowrap}
@@ -223,7 +218,7 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
     </div>
     <button class="close" id="bClose" aria-label="Свернуть лист">✕</button>
     <button class="close undo" id="bUndo2" aria-label="Убрать последнюю черту">↶</button>
-    <button class="sealBtn" id="bSeal" aria-label="Поставить печать и завершить"></button>
+    <div class="seals" id="seals" role="group" aria-label="Печати"></div>
     <button class="again" id="bAgain">Заново</button>
     <div class="modeSw" id="modeSw" role="group" aria-label="Режим письма"><button data-m="trace">Каллиграфия</button><button data-m="free">Фристайл</button></div>
     <div class="stampHint" id="stampHint" hidden>Коснитесь листа там, где поставить печать</div>
@@ -235,7 +230,7 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
     <button id="bTrace" class="primary" hidden>Обвести</button>
     <button id="bFree" hidden>Фристайл</button>
     <button id="bClear">Заново</button>
-    <button id="bBrush">Кисть и печать</button>
+    <button id="bBrush">Кисть</button>
     <button id="bHint" hidden>Подсказка</button>
     <button id="bCompare" hidden>Образец</button>
   </div>
@@ -243,14 +238,12 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
 
 <div class="ov" id="ovBrush" hidden>
   <div class="panel" role="dialog" aria-label="Кисть">
-    <div class="ph"><h2>Кисть и печать</h2><button id="cBrush">Готово</button></div>
+    <div class="ph"><h2>Кисть</h2><button id="cBrush">Готово</button></div>
     <div class="row"><div class="sizes" role="group" aria-label="Толщина">
       <button data-s="4.2">Тонкая</button><button data-s="6">Средняя</button><button data-s="8.2">Толстая</button></div></div>
     <div class="row"><label for="sens" class="src">Чувствительность к нажиму</label><input type="range" id="sens" min="0.4" max="1.8" step="0.05" value="1"></div>
     <div class="src" id="src">Коснитесь листа: определю, чем вы пишете.</div>
     <div class="tips">
-      <div class="lab">Печать</div>
-      <div class="sealPick" id="sealPick" role="group" aria-label="Печать"></div>
       <div class="lab">Окончания черт</div>
       <p><b><span>とめ</span>Томэ.</b> Задержите кисть в конце и поднимите. Чем дольше держите, тем сильнее тушь уходит в бумагу.</p>
       <p><b><span>はね</span>Ханэ.</b> Короткая остановка, затем быстрый отскок. Скорость сама сузит хвост.</p>
@@ -610,7 +603,7 @@ function finish(){
   rec[mode]=Math.max(rec[mode]||0,score); rec.runs=(rec.runs||0)+1; save();
   const label=g?{'優':'отлично','良':'хорошо','可':'зачёт'}[g]:'ещё раз';
   scoreText=`${score} из 100 · ${first} из ${n} с первой попытки · ${label}.`;
-  setFb(scoreText+' Поставьте печать '+sealName()+', чтобы закрепить работу.', g?'good':'bad');
+  setFb(scoreText+' Поставьте печать, чтобы закрепить работу.', g?'good':'bad');
   $('#bNext').classList.add('pulse');
   if (g){ seal=g; drawSeal(g); const as=$('#artSeal'); as.textContent=g; as.hidden=false; }
   sheet.classList.add('mine'); drawBg();
@@ -750,16 +743,16 @@ document.querySelectorAll('#modeSw button').forEach(b=>b.onclick=()=>switchMode(
 const startMode=()=>mode==='free'?startFree():startTracing();
 $('#bAgain').onclick=()=>{ reset(true); if(mode==='trace') exitFocus(9000); };
 $('#bUndo2').onclick=()=>{ inkStrokes.pop(); replayInk(); };
-function renderSeals(){ $('#bSeal').innerHTML=sealSvg();
-  const box=$('#sealPick'); box.innerHTML='';
-  Object.entries(SEALS).forEach(([k,s])=>{ const b=document.createElement('button'); b.setAttribute('aria-pressed',k===sealKey());
-    b.innerHTML=sealSvg(k)+`<b>${s.name}</b><small>${s.ru}</small>`;
-    b.onclick=()=>{ prefs.seal=k; persist(); renderSeals(); }; box.appendChild(b); }); }
+function renderSeals(){ const box=$('#seals'); box.innerHTML='';
+  Object.entries(SEALS).forEach(([k,s])=>{ const b=document.createElement('button'); b.className='sealBtn'; b.dataset.seal=k;
+    b.setAttribute('aria-label','Печать '+s.name+' — '+s.ru); b.title=s.name+' — '+s.ru; b.innerHTML=sealSvg(k);
+    b.onclick=()=>{ b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),150); armStamp(!(stampMode&&stampKey===k),k); };
+    box.appendChild(b); }); }
 renderSeals();
 let stampMode=false;
-function armStamp(on){ stampMode=on; if(on) clearTimeout(focusT); $('#bSeal').classList.toggle('armed',on); $('#stampHint').hidden=!on; }
-$('#bSeal').onclick=()=>{ const b=$('#bSeal'); b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),150); armStamp(!stampMode); };
-function placeSeal(e){ const p=toV(e); kuSeal={x:p.x,y:p.y,set:sealKey()}; armStamp(false); document.body.classList.add('sealed'); clearFx(); setTimeout(()=>exitFocus(0),650); }
+let stampKey='ichigo';
+function armStamp(on,key){ stampMode=on; if(key) stampKey=key; if(on) clearTimeout(focusT); document.querySelectorAll('#seals .sealBtn').forEach(b=>b.classList.toggle('armed',on&&b.dataset.seal===stampKey)); $('#stampHint').hidden=!on; }
+function placeSeal(e){ const p=toV(e); kuSeal={x:p.x,y:p.y,set:stampKey}; armStamp(false); document.body.classList.add('sealed'); clearFx(); setTimeout(()=>exitFocus(0),650); }
 $('#bBrush').onclick=()=>{ $('#ovBrush').hidden=false; };
 $('#cBrush').onclick=()=>{ $('#ovBrush').hidden=true; };
 $('#bList').onclick=()=>{ buildGrid(); $('#ovList').hidden=false; };
