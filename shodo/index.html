@@ -11,8 +11,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="書道">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.575bbf7d.png">
+<link rel="icon" type="image/png" href="icon-192.4f67fdd5.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="ShipporiB1-700.woff" as="font" type="font/woff" crossorigin>
 <style>
@@ -666,7 +666,7 @@ resize(); select(deck[pos]);
 </script>
 <script>
 if('serviceWorker' in navigator){addEventListener('load',()=>{
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
   // the 発句 app next door caches its own start page; make sure it never kept a copy of this one
   if(window.caches){const home=new URL('../index.html',location.href).href;
     caches.keys().then(ks=>ks.filter(k=>k.startsWith('kisti-')).forEach(k=>caches.open(k).then(c=>c.match(home).then(r=>r&&r.clone().text().then(t=>{
