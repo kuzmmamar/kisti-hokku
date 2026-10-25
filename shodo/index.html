@@ -83,10 +83,10 @@ body.focus .close{display:block}
 .close.undo{right:calc(max(10px,env(safe-area-inset-right,0px)) + 50px);font-size:19px}
 body.focus .close.undo{display:none}
 body.focus.free .close.undo{display:none}
-body.focus.free #bClose{display:none}
+body.focus #bClose{display:none}
 .sealBtn{display:none;position:absolute;top:max(8px,env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));z-index:2;width:46px;height:46px;min-height:0;padding:0;border:0;background:transparent;border-radius:3px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
 .sealBtn svg{display:block;width:100%;height:100%}
-body.focus.free .sealBtn{display:block}
+body.focus .sealBtn{display:block}
 .sealBtn.press{transform:scale(.88);transition:transform .12s}
 .sealBtn.armed{outline:3px solid #B2221A;outline-offset:3px}
 .stampHint{position:absolute;top:calc(max(8px,env(safe-area-inset-top,0px)) + 54px);left:50%;transform:translateX(-50%);z-index:2;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;white-space:nowrap}
@@ -342,7 +342,7 @@ function drawBg(){
   if (mode==='free' && freeImg && freeImg.complete && freeImg.naturalWidth){
     c.save(); c.globalAlpha=.24; c.drawImage(freeImg,4.5,4.5,100,100); c.restore();
   }
-  if (mode==='trace' && !done){
+  if (mode==='trace' && !done && !kuSeal){
     ghost(c, st, INK, .11);
     if (cur<st.length){ ghost(c,[st[cur]], HL, .32); startMark(c, st[cur], HL); }
   }
@@ -539,7 +539,8 @@ function setFocus(on, animate=true){
   if (document.body.classList.contains('focus')===on) return;
   const a=sheet.getBoundingClientRect();
   document.body.classList.toggle('focus',on);
-  if(!on && mode==='free' && (inkStrokes.length || kuSeal)){ sheet.classList.add('mine'); setFb(kuSeal?'Работа скреплена печатью 宇宙空. → — следующий знак.':'Ваш вариант поверх образца. «Обвести» — по чертам, → — следующий знак.','good'); }
+  if(!on && kuSeal){ sheet.classList.add('mine'); drawBg(); setFb((scoreText&&done?scoreText+' ':'')+'Работа скреплена печатью 宇宙空. → — следующий знак.','good'); }
+  else if(!on && mode==='free' && inkStrokes.length){ sheet.classList.add('mine'); setFb(kuSeal?'Работа скреплена печатью 宇宙空. → — следующий знак.':'Ваш вариант поверх образца. «Обвести» — по чертам, → — следующий знак.','good'); }
   resize();
   const b=sheet.getBoundingClientRect();
   if (!animate || reduceMotion || !b.width || !sheet.animate) return;
@@ -549,7 +550,7 @@ function setFocus(on, animate=true){
 function enterFocus(){ clearTimeout(focusT); setFocus(true); if(mode!=='free') exitFocus(9000); }
 function exitFocus(delay=0, animate=true){ clearTimeout(focusT); if(!delay){ setFocus(false,animate); return; } focusT=setTimeout(()=>setFocus(false),delay); }
 function afterStroke(){
-  if (done){ exitFocus(900); return; }
+  if (done){ clearTimeout(focusT); return; }
   if (mode==='free'){ clearTimeout(focusT); return; }
   exitFocus(9000);
 }
@@ -590,6 +591,7 @@ function hideFx(){ sheet.classList.remove('peek'); cancelAnimationFrame(fxTimer)
   if(partOn>=0){ partOn=-1; document.querySelectorAll('.pt').forEach(b=>b.setAttribute('aria-pressed','false')); document.querySelectorAll('#orig li').forEach(li=>li.classList.remove('sel')); }
   $('#bCompare').setAttribute('aria-pressed','false'); clearFx(); }
 
+let scoreText='';
 function finish(){
   done=true; const n=res.length, first=res.filter(r=>r.first).length, q=res.reduce((a,r)=>a+r.q,0)/n;
   const score=Math.round(100*(.6*first/n+.4*q));
@@ -597,7 +599,8 @@ function finish(){
   const k=DATA[idx].k, rec=store[k]||(store[k]={});
   rec[mode]=Math.max(rec[mode]||0,score); rec.runs=(rec.runs||0)+1; save();
   const label=g?{'優':'отлично','良':'хорошо','可':'зачёт'}[g]:'ещё раз';
-  setFb(`${score} из 100 · ${first} из ${n} с первой попытки · ${label}. Коснитесь знака, чтобы написать ещё раз, → — следующий знак.`, g?'good':'bad');
+  scoreText=`${score} из 100 · ${first} из ${n} с первой попытки · ${label}.`;
+  setFb(scoreText+' Поставьте печать 宇宙空, чтобы закрепить работу.', g?'good':'bad');
   $('#bNext').classList.add('pulse');
   if (g){ seal=g; drawSeal(g); const as=$('#artSeal'); as.textContent=g; as.hidden=false; }
   sheet.classList.add('mine'); drawBg();
@@ -681,7 +684,7 @@ function setFb(t,cls){
 }
 function reset(keep){
   if(typeof armStamp==="function") armStamp(false);
-  kuSeal=false; document.body.classList.remove('sealed');
+  kuSeal=false; scoreText=''; document.body.classList.remove('sealed');
   hideFx(); seal=null; clearFx(); if(keep) clearTimeout(focusT); else exitFocus(0,false); sheet.classList.remove('mine'); $('#artSeal').hidden=true; $('#artK').textContent=DATA[idx].k; showArt();
   inkStrokes=[]; live=null; cur=0; tries=0; res=[]; done=false;
   $('#bNext').classList.remove('pulse');
@@ -739,7 +742,7 @@ $('#bAgain').onclick=()=>{ reset(true); if(mode==='trace') exitFocus(9000); };
 $('#bUndo2').onclick=()=>{ inkStrokes.pop(); replayInk(); };
 $('#bSeal').innerHTML=sealSvg();
 let stampMode=false;
-function armStamp(on){ stampMode=on; $('#bSeal').classList.toggle('armed',on); $('#stampHint').hidden=!on; }
+function armStamp(on){ stampMode=on; if(on) clearTimeout(focusT); $('#bSeal').classList.toggle('armed',on); $('#stampHint').hidden=!on; }
 $('#bSeal').onclick=()=>{ const b=$('#bSeal'); b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),150); armStamp(!stampMode); };
 function placeSeal(e){ const p=toV(e); kuSeal={x:p.x,y:p.y}; armStamp(false); document.body.classList.add('sealed'); clearFx(); setTimeout(()=>exitFocus(0),650); }
 $('#bBrush').onclick=()=>{ $('#ovBrush').hidden=false; };
