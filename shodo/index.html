@@ -415,15 +415,18 @@ function toV(e){ const r=sheet.getBoundingClientRect(); return {x:VX0+(e.clientX
 function beginStroke(e){
   const p=toV(e), now=performance.now();
   live={ops:[],pts:[p],src:null,base:0,t0:now,last:{x:p.x,y:p.y,t:now},still:now,ink:1,r:0,p:.5,
-    br:Array.from({length:NB},(_,k)=>({o:(k/(NB-1))*2-1+(Math.random()-.5)*.08, thr:Math.random()*.55, prev:null})),
-    dir:{x:0,y:1}, v:0, bleedR:0};
+    br:Array.from({length:NB},(_,k)=>({o:(k/(NB-1))*2-1+(Math.random()-.5)*.08, thr:Math.random()*.55, prev:null, ph:Math.random()*6.283, fq:.35+Math.random()*.5})),
+    dir:{x:0,y:1}, v:0, bleedR:0, dist:0, free:mode==='free'};
   const raw=readPressure(e,live); live.p=raw;
-  const w=prefs.size, r=w/2*(.4+.75*shape(raw));
+  const w=brushW(), r=w/2*(.4+.75*shape(raw));
   live.r=r;
-  const dab=[1,p.x,p.y,r*.92]; live.ops.push(dab); prepInk(xInk); drawOp(xInk,dab);
+  const dab=[1,p.x,p.y,r*(live.free?1.08:.92)]; live.ops.push(dab); prepInk(xInk); drawOp(xInk,dab);
   showMeter(raw,false); $('#src').textContent=SRC_TEXT[live.src];
   dwellLoop();
 }
+const CALLI_W={"夢":6.3,"愛":7.1,"石":13.9,"春":7.9,"静":6.9,"雷":10.2,"憶":6.9,"風":7.6,"影":6.5,"跡":5.2,"月":10.4,"魚":10.8,"涙":7.3,"空":6.5,"音":8.8,"寒":6.4,"熱":8.0,"感":8.1,"美":7.1,"雪":9.5,"霧":6.4,"無":7.3,"水":8.7,"花":10.0,"期":7.7,"会":11.3,"夏":8.8,"秋":8.9,"冬":11.4,"葉":7.3,"浮":6.4,"氷":8.8,"巣":6.2,"孤":6.5,"雨":11.0,"松":10.6,"舟":8.8,"竹":9.2,"間":7.7,"光":9.9,"永":7.3,"心":14.0,"寂":6.8,"山":12.5,"道":7.3,"縁":8.6,"星":7.6,"日":12.0,"為":10.8,"侘":8.1};
+/* freestyle: brush as wide as the sample's main strokes (the drawn width is ~0.85 of w) */
+function brushW(){ return mode==='free' ? clamp(CALLI_W[DATA[idx].k]||8,6,10.5)/0.85*(prefs.size/6) : prefs.size; }
 function shape(p){ return clamp(.5+(p-.5)*prefs.sens,0,1); }
 
 function moveStroke(e){
@@ -438,10 +441,10 @@ function step(e){
   live.v=live.v*.7+v*.3;
   const raw=readPressure(e,live); live.p=live.p*.6+raw*.4;
   const pr=shape(live.p);
-  const w=prefs.size;
+  const w=brushW();
   const speedF=clamp(1.18-live.v*1.25,.38,1.18);
   const target=w/2*(.3+1.05*pr)*speedF;
-  live.r=live.r*.72+target*.28;
+  live.r=live.r*.72+target*.28*(live.free?1+.07*Math.sin((live.dist||0)*.45+live.br[0].ph)+.04*Math.sin((live.dist||0)*1.3):1);
   const dx=(p.x-L.x)/d, dy=(p.y-L.y)/d; live.dir={x:live.dir.x*.6+dx*.4,y:live.dir.y*.6+dy*.4};
   const dl=Math.hypot(live.dir.x,live.dir.y)||1, nx=-live.dir.y/dl, ny=live.dir.x/dl;
   // ink runs out with distance and pressure; speed dries the brush (kasure)
@@ -449,9 +452,10 @@ function step(e){
   const dry=clamp(live.v*1.1-.18,0,.8) + (1-live.ink)*.55;
   const bw=live.r*2/NB*2.15;
   prepInk(xInk);
+  live.dist+=d;
   for (const b of live.br){
     const pos={x:p.x+nx*b.o*live.r, y:p.y+ny*b.o*live.r};
-    if (b.prev && (1-dry) > b.thr*(dry>.15?1.35:.6)){
+    if (b.prev && (1-dry) > b.thr*(dry>.15?(live.free?1.15:1.35):.6)){
       const op=[0,b.prev.x,b.prev.y,pos.x,pos.y,bw]; live.ops.push(op); drawOp(xInk,op);
     }
     b.prev=pos;
@@ -503,6 +507,10 @@ function endStroke(){
       }
     }
   }
+  if (live.free && now-live.last.t<90 && live.v>.12){
+    const dl=Math.hypot(live.dir.x,live.dir.y)||1, ux=live.dir.x/dl, uy=live.dir.y/dl, nd=Math.round(clamp(live.v*30,3,10));
+    for(let i=0;i<nd;i++){ const along=live.v*60*(.6+Math.random()*.9), side=(Math.random()-.5)*live.r*2.4;
+      const o=[1,live.last.x+ux*along-uy*side, live.last.y+uy*along+ux*side, .15+Math.random()*Math.min(.9,live.r*.18)]; live.ops.push(o); drawOp(xInk,o); } }
   const s=live; live=null; showMeter(0,false);
   const span=s.pts.reduce((m,p)=>Math.max(m,Math.hypot(p.x-s.pts[0].x,p.y-s.pts[0].y)),0);
   inkStrokes.push(s);
