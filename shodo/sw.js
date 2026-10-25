@@ -1,5 +1,5 @@
 // 書道 — офлайн-кэш. Версия считается из содержимого файлов при сборке.
-const VERSION='shodo-46a3e2ead8';
+const VERSION='shodo-d10c14bb21';
 const FILES=["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "ShipporiB1-500.woff", "ShipporiB1-700.woff", "../Golos.woff"];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('shodo-')&&k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
