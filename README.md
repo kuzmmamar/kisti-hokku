@@ -7,6 +7,8 @@
 
 На iPhone: открыть ссылку в Safari → «Поделиться» → «На экран „Домой“». После первого запуска работает без интернета.
 
+**書道 — тренажёр японской каллиграфии:** https://kuzmmamar.github.io/kisti-hokku/shodo/ (своя иконка, ставится на экран «Домой» отдельно).
+
 Порядок черт — [KanjiVG](https://kanjivg.tagaini.net/) © Ulrich Apel, CC BY-SA 3.0.
 Иллюстрации — [Twemoji](https://github.com/jdecked/twemoji), CC BY 4.0.
 Почерки (楷書, 行書, 行草, 草書) — шрифты Yuji Syuku, Yuji Boku, Ma Shan Zheng, Long Cang, Zhi Mang Xing, Liu Jian Mao Cao (SIL OFL).
