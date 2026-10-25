@@ -483,13 +483,25 @@ function dwellLoop(){
 }
 function endStroke(){
   if(!live) return; cancelAnimationFrame(rafId);
-  // fast exit = harai: the brush lifts, the tip tapers along the direction of travel
+  // lifting while moving = harai: every bristle carries on along the (curving) path and closes into a fine tip
   const now=performance.now();
-  if (live.v>.09 && now-live.last.t<60 && live.pts.length>3){
-    const len=clamp(live.v*55,2,9), steps=10, dl=Math.hypot(live.dir.x,live.dir.y)||1, ux=live.dir.x/dl, uy=live.dir.y/dl;
-    let x=live.last.x, y=live.last.y, r=live.r; prepInk(xInk);
-    for(let i=1;i<=steps;i++){ const nx=x+ux*len/steps, ny=y+uy*len/steps; r*=.78;
-      const op=[0,x,y,nx,ny,Math.max(.12,r*1.5)]; live.ops.push(op); drawOp(xInk,op); x=nx;y=ny; }
+  if (now-live.last.t<90 && live.v>.03 && live.pts.length>3){
+    const P=live.pts, n=P.length, dl=Math.hypot(live.dir.x,live.dir.y)||1;
+    let ang=Math.atan2(live.dir.y/dl, live.dir.x/dl), turn=0;
+    if (n>=6){ const a1=Math.atan2(P[n-3].y-P[n-6].y,P[n-3].x-P[n-6].x), a2=Math.atan2(P[n-1].y-P[n-3].y,P[n-1].x-P[n-3].x);
+      turn=clamp(Math.atan2(Math.sin(a2-a1),Math.cos(a2-a1)),-.5,.5); }
+    const r0=live.r, L=clamp(live.v*90,2.2,17)*(.75+.25*Math.min(1,r0/(prefs.size/2))), N=Math.max(24,Math.round(L*6));
+    const bw0=r0*2/NB*2.15; let x=live.last.x, y=live.last.y; prepInk(xInk);
+    for (let i=1;i<=N;i++){
+      const t=i/N; ang+=turn*.7/N; x+=Math.cos(ang)*L/N; y+=Math.sin(ang)*L/N;
+      const k=Math.pow(Math.cos(t*Math.PI/2),1.25), rr=r0*k, nx=-Math.sin(ang), ny=Math.cos(ang), bw=Math.max(.05,bw0*(.3+.7*k));
+      for (const b of live.br){
+        const pos={x:x+nx*b.o*rr, y:y+ny*b.o*rr};
+        const keep = t<.7 || Math.abs(b.o)<.35 || b.thr < 1.6*(1-t)+.2;   // a few outer hairs give out near the tip
+        if (b.prev && keep){ const op=[0,b.prev.x,b.prev.y,pos.x,pos.y,bw]; live.ops.push(op); drawOp(xInk,op); }
+        b.prev=pos;
+      }
+    }
   }
   const s=live; live=null; showMeter(0,false);
   const span=s.pts.reduce((m,p)=>Math.max(m,Math.hypot(p.x-s.pts[0].x,p.y-s.pts[0].y)),0);
