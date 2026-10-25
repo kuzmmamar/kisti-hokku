@@ -74,6 +74,13 @@ body.focus .close{display:block}
 .close.undo{right:calc(max(10px,env(safe-area-inset-right,0px)) + 50px);font-size:19px}
 body.focus .close.undo{display:none}
 body.focus.free .close.undo{display:block}
+body.focus.free #bClose{display:none}
+.sealBtn{display:none;position:absolute;top:max(8px,env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));z-index:2;width:46px;height:46px;min-height:0;padding:0;border:0;background:transparent;border-radius:3px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+.sealBtn svg{display:block;width:100%;height:100%}
+body.focus.free .sealBtn{display:block}
+.sealBtn.press{transform:scale(.88);transition:transform .12s}
+.sealBtn.armed{outline:3px solid #B2221A;outline-offset:3px}
+.stampHint{position:absolute;top:calc(max(8px,env(safe-area-inset-top,0px)) + 54px);left:50%;transform:translateX(-50%);z-index:2;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;white-space:nowrap}
 
 .kbtn{display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:0;min-width:0;text-align:left}
 .kbtn .k{font-family:var(--display);font-size:44px;font-weight:700;line-height:1;flex:none}
@@ -201,6 +208,8 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
     </div>
     <button class="close" id="bClose" aria-label="Свернуть лист">✕</button>
     <button class="close undo" id="bUndo2" aria-label="Убрать последнюю черту">↶</button>
+    <button class="sealBtn" id="bSeal" aria-label="Поставить печать 空 и завершить"></button>
+    <div class="stampHint" id="stampHint" hidden>Коснитесь листа там, где поставить печать</div>
   </div>
 
   <div class="fb" id="fb"></div>
@@ -327,7 +336,28 @@ function drawBg(){
     if (cur<st.length){ ghost(c,[st[cur]], HL, .32); startMark(c, st[cur], HL); }
   }
 }
-function clearFx(){ xFx.save(); xFx.setTransform(1,0,0,1,0,0); xFx.clearRect(0,0,cFx.width,cFx.height); xFx.restore(); if(seal) drawSeal(seal); }
+function clearFx(){ xFx.save(); xFx.setTransform(1,0,0,1,0,0); xFx.clearRect(0,0,cFx.width,cFx.height); xFx.restore(); if(seal) drawSeal(seal); if(kuSeal) drawKuSeal(xFx); }
+/* personal seal: 空 in seal script, white on cinnabar (空 — emptiness, sky, cosmos; Кузьма ← κόσμος) */
+let kuSeal=false;
+const KU=(()=>{ try{ const t=JSON.parse(JSON.stringify(ANC['空'].strip.find(g=>g.l==='seal'))); return t; }catch(e){ return null; } })();
+function rnd(seed){ return ()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; }; }
+function drawKuSeal(ctx){
+  if(!KU) return;
+  const s=17, sh=s*K/KY, x=clamp(kuSeal.x-s/2,VX0+1,VX0+VW-s-1), y=clamp(kuSeal.y-sh/2,1,V-sh-1), r=rnd(7);
+  ctx.save();
+  ctx.fillStyle='rgba(178,34,26,.93)';
+  ctx.beginPath(); ctx.moveTo(x+.3,y); ctx.lineTo(x+s-.2,y+.2); ctx.lineTo(x+s,y+sh-.3); ctx.lineTo(x+.2,y+sh); ctx.closePath(); ctx.fill();
+  const [vx,vy,vw,vh]=KU.v.split(' ').map(Number), pad=.14;
+  ctx.save(); ctx.translate(x+pad*s,y+pad*sh); ctx.scale(s*(1-2*pad)/vw, sh*(1-2*pad)/vh); ctx.translate(-vx,-vy);
+  ctx.fillStyle=PAPER; ctx.strokeStyle=PAPER; ctx.lineWidth=13; ctx.lineJoin='round'; KU.d.forEach(d=>{ const p=new Path2D(d); ctx.fill(p); ctx.stroke(p); }); ctx.restore();
+  ctx.fillStyle=PAPER;   /* worn stone: tiny gaps along the edge */
+  for(let i=0;i<14;i++){ const side=i%4, t=r(), rad=.15+r()*.35;
+    const px= side===0? x+t*s : side===1? x+s : side===2? x+t*s : x, py= side===0? y : side===1? y+t*sh : side===2? y+sh : y+t*sh;
+    ctx.beginPath(); ctx.arc(px,py,rad,0,7); ctx.fill(); }
+  ctx.restore();
+}
+function sealSvg(){ if(!KU) return '';
+  return `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="1" y="1" width="98" height="98" rx="3" fill="#B2221A"/><svg x="14" y="14" width="72" height="72" viewBox="${KU.v}" preserveAspectRatio="none"><g fill="#F8F6EF" stroke="#F8F6EF" stroke-width="13" stroke-linejoin="round">${KU.d.map(d=>`<path d="${d}"/>`).join('')}</g></svg></svg>`; }
 
 /* ---------- brush engine ---------- */
 /* ops: [0,x0,y0,x1,y1,w] bristle line · [1,x,y,r] solid dab · [2,x,y,r,a] ink bleed */
@@ -456,6 +486,7 @@ function endStroke(){
 function showMeter(v,dwell){ const m=$('#meter'); m.querySelector('span').style.width=(v*100).toFixed(0)+'%'; m.classList.toggle('dwell',dwell); }
 
 sheet.addEventListener('pointerdown',e=>{
+  if (stampMode && document.body.classList.contains('focus')){ e.preventDefault(); placeSeal(e); return; }
   if (!document.body.classList.contains('focus')){ e.preventDefault(); mode==='free'?startFree():startTracing(); return; }
   if (done){ e.preventDefault(); return; }
   e.preventDefault(); sheet.setPointerCapture(e.pointerId); hideFx(); clearTimeout(focusT); beginStroke(e);
@@ -478,7 +509,7 @@ function setMode(m){ mode=m; document.body.classList.toggle('free',m==='free'); 
 function startTracing(){ if(mode!=='trace'){ setMode('trace'); reset(); } if(done) reset(); hideFx(); enterFocus(); }
 function startFree(){ if(mode!=='free'){ setMode('free'); reset(); } hideFx(); enterFocus(); }
 const MSG={trace:'Коснитесь знака, чтобы обвести его кистью.',memory:'Пишите без образца. Ошибка покажет нужную черту.',
-  free:'Фристайл: пишите поверх образца как хотите, без проверки. ↶ убирает последнюю черту, ✕ — готово.',watch:'Коснитесь листа, чтобы повторить. Цвет черты — её часть.'};
+  free:'Фристайл: пишите поверх образца как хотите, без проверки. ↶ убирает последнюю черту, печать 空 завершает работу.',watch:'Коснитесь листа, чтобы повторить. Цвет черты — её часть.'};
 
 /* random order: a shuffled deck, reshuffled after all twenty */
 function newDeck(avoid){ const a=[...Array(DATA.length).keys()];
@@ -496,7 +527,7 @@ function setFocus(on, animate=true){
   if (document.body.classList.contains('focus')===on) return;
   const a=sheet.getBoundingClientRect();
   document.body.classList.toggle('focus',on);
-  if(!on && mode==='free' && inkStrokes.length){ sheet.classList.add('mine'); setFb('Ваш вариант поверх образца. «Обвести» — по чертам, → — следующий знак.','good'); }
+  if(!on && mode==='free' && inkStrokes.length){ sheet.classList.add('mine'); setFb(kuSeal?'Работа скреплена печатью 空. «Обвести» — по чертам, → — следующий знак.':'Ваш вариант поверх образца. «Обвести» — по чертам, → — следующий знак.','good'); }
   resize();
   const b=sheet.getBoundingClientRect();
   if (!animate || reduceMotion || !b.width || !sheet.animate) return;
@@ -637,6 +668,8 @@ function setFb(t,cls){
   f.appendChild(document.createTextNode(t||MSG[mode]));
 }
 function reset(){
+  if(typeof armStamp==="function") armStamp(false);
+  kuSeal=false;
   hideFx(); seal=null; clearFx(); exitFocus(0,false); sheet.classList.remove('mine'); $('#artSeal').hidden=true; $('#artK').textContent=DATA[idx].k; showArt();
   inkStrokes=[]; live=null; cur=0; tries=0; res=[]; done=false;
   $('#bNext').classList.remove('pulse');
@@ -689,6 +722,11 @@ $('#bPrev').onclick=prev;
 $('#bClose').onclick=()=>exitFocus(0);
 $('#bFree').onclick=startFree;
 $('#bUndo2').onclick=()=>{ inkStrokes.pop(); replayInk(); };
+$('#bSeal').innerHTML=sealSvg();
+let stampMode=false;
+function armStamp(on){ stampMode=on; $('#bSeal').classList.toggle('armed',on); $('#stampHint').hidden=!on; }
+$('#bSeal').onclick=()=>{ const b=$('#bSeal'); b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),150); armStamp(!stampMode); };
+function placeSeal(e){ const p=toV(e); kuSeal={x:p.x,y:p.y}; armStamp(false); clearFx(); setTimeout(()=>exitFocus(0),650); }
 $('#bBrush').onclick=()=>{ $('#ovBrush').hidden=false; };
 $('#cBrush').onclick=()=>{ $('#ovBrush').hidden=true; };
 $('#bList').onclick=()=>{ buildGrid(); $('#ovList').hidden=false; };
