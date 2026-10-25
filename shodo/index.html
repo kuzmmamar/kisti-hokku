@@ -378,6 +378,7 @@ function sealSvg(key=sealKey()){
 function drawOp(c, o){
   if (o[0]===0){ c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); }
   else if (o[0]===1){ c.beginPath(); c.arc(o[1],o[2],o[3],0,7); c.fill(); }
+  else if (o[0]===3){ c.globalAlpha=o[6]; c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); c.globalAlpha=1; }
   else { const g=c.createRadialGradient(o[1],o[2],0,o[1],o[2],o[3]);
     g.addColorStop(0,`rgba(18,18,18,${o[4]})`); g.addColorStop(.55,`rgba(18,18,18,${o[4]*.75})`); g.addColorStop(1,'rgba(18,18,18,0)');
     c.fillStyle=g; c.beginPath(); c.arc(o[1],o[2],o[3],0,7); c.fill(); c.fillStyle=INK; }
@@ -448,17 +449,34 @@ function step(e){
   const dx=(p.x-L.x)/d, dy=(p.y-L.y)/d; live.dir={x:live.dir.x*.6+dx*.4,y:live.dir.y*.6+dy*.4};
   const dl=Math.hypot(live.dir.x,live.dir.y)||1, nx=-live.dir.y/dl, ny=live.dir.x/dl;
   // ink runs out with distance and pressure; speed dries the brush (kasure)
-  live.ink=Math.max(.22, live.ink - d*.0028*(.6+pr));
+  live.ink=Math.max(live.free?.08:.22, live.ink - d*.0028*(.6+pr)*(live.free?1.7:1));
   const dry=clamp(live.v*1.1-.18,0,.8) + (1-live.ink)*.55;
-  const bw=live.r*2/NB*2.15;
+  if (live.free){ live.dryS=(live.dryS??dry)*.88+dry*.12; }   // freestyle: dryness changes slowly, not per touch event
+  const dryN=clamp(live.free?live.dryS:dry,0,1);
+  const bw=live.r*2/NB*(live.free?2.15*(1-.62*dryN):2.15);   // dry hairs separate: white streaks (kasure)
   prepInk(xInk);
   live.dist+=d;
   for (const b of live.br){
     const pos={x:p.x+nx*b.o*live.r, y:p.y+ny*b.o*live.r};
-    if (b.prev && (1-dry) > b.thr*(dry>.15?(live.free?1.15:1.35):.6)){
+    // freestyle: each hair runs dry in stretches (slow noise along the stroke) — long white streaks, ragged edges
+    const wet = live.free ? .5+.3*Math.sin(live.dist*b.fq*.4+b.ph)+.14*Math.sin(live.dist*b.fq*1.1+b.ph*1.9)-b.thr*.35 : 1;
+    const th = dryN*(1.0+(Math.abs(b.o)>.6?.35:0));   // hysteresis: a hair stays dry (or wet) for a stretch, no flicker
+    if (live.free){ if (b.dry){ if (wet>th+.09 || dryN<.1) b.dry=false; } else if (dryN>.12 && wet<th-.04) b.dry=true; }
+    const dryHair = live.free && b.dry;
+    if (b.prev && !dryHair && (live.free || (1-dry) > b.thr*(dry>.15?1.35:.6))){
       const op=[0,b.prev.x,b.prev.y,pos.x,pos.y,bw]; live.ops.push(op); drawOp(xInk,op);
     }
     b.prev=pos;
+  }
+  if (live.free){
+    // stray hairs along the edges: short, thin, leaning back along the stroke
+    for (const side of [-1,1]) if (dryN>.2 && Math.random()<.22*dryN*Math.min(1,d/.8)){
+      const ex=p.x+nx*side*live.r*(.88+Math.random()*.14), ey=p.y+ny*side*live.r*(.88+Math.random()*.14), len=live.r*(.2+Math.random()*.55);
+      const bx=-live.dir.x/dl, by=-live.dir.y/dl;
+      const o=[3,ex,ey,ex+nx*side*len*.6+bx*len,ey+ny*side*len*.5+by*len,.08+Math.random()*.2,.75+Math.random()*.25]; live.ops.push(o); drawOp(xInk,o); }
+    // slow, wet brush: ink creeps into the paper at the edges
+    if (live.v<.035 && dryN<.2 && Math.random()<.5){ const side=Math.random()<.5?-1:1;
+      const o=[2,p.x+nx*side*live.r*.95,p.y+ny*side*live.r*.95,live.r*(.3+Math.random()*.25),.18]; live.ops.push(o); drawOp(xInk,o); }
   }
   live.pts.push(p); live.last={x:p.x,y:p.y,t:now};
   if (d>.6){ live.still=now; live.bleedR=0; }
@@ -498,10 +516,10 @@ function endStroke(){
     const bw0=r0*2/NB*2.15; let x=live.last.x, y=live.last.y; prepInk(xInk);
     for (let i=1;i<=N;i++){
       const t=i/N; ang+=turn*.85/N; x+=Math.cos(ang)*L/N; y+=Math.sin(ang)*L/N;
-      const k=Math.pow(Math.cos(t*Math.PI/2),1.5), rr=r0*k, nx=-Math.sin(ang), ny=Math.cos(ang), bw=Math.max(.05,bw0*(.3+.7*k));
+      const k=Math.pow(Math.cos(t*Math.PI/2),1.5), rr=r0*k, nx=-Math.sin(ang), ny=Math.cos(ang), bw=Math.max(.05,bw0*(.3+.7*k)*(live.free?.72:1));
       for (const b of live.br){
         const pos={x:x+nx*b.o*rr, y:y+ny*b.o*rr};
-        const keep = t<.78 || Math.abs(b.o)<.4 || b.thr < 1.8*(1-t)+.25;   // a few outer hairs give out near the tip
+        const keep = live.free ? (t<.4 || Math.abs(b.o)<.2 || b.thr < 1.25*(1-t)+.06) : (t<.78 || Math.abs(b.o)<.4 || b.thr < 1.8*(1-t)+.25);   // a few outer hairs give out near the tip
         if (b.prev && keep){ const op=[0,b.prev.x,b.prev.y,pos.x,pos.y,bw]; live.ops.push(op); drawOp(xInk,op); }
         b.prev=pos;
       }
