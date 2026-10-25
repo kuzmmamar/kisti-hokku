@@ -71,6 +71,9 @@ body.focus .sheet{width:min(100cqw,100cqh);height:min(100cqh,calc(min(100cqw,100
 .close{display:none;position:absolute;top:max(10px,env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));z-index:2;
   width:40px;height:40px;padding:0;border-radius:20px;font-size:16px;line-height:1}
 body.focus .close{display:block}
+.close.undo{right:calc(max(10px,env(safe-area-inset-right,0px)) + 50px);font-size:19px}
+body.focus .close.undo{display:none}
+body.focus.free .close.undo{display:block}
 
 .kbtn{display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:0;min-width:0;text-align:left}
 .kbtn .k{font-family:var(--display);font-size:44px;font-weight:700;line-height:1;flex:none}
@@ -127,7 +130,7 @@ body.focus .close{display:block}
 .prog{display:inline-flex;gap:3px;vertical-align:middle;margin-right:8px}
 .prog i{width:10px;height:5px;border-radius:2px;background:var(--line)}
 .prog i.d{background:var(--ok)}.prog i.m{background:var(--shu)}.prog i.c{background:var(--accent)}
-.bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .bar .primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 .art{position:absolute;inset:0;z-index:1;display:grid;place-items:center;background:#F8F6EF;cursor:pointer;transition:opacity .2s ease}
 .artImg{width:90%;height:90%;object-fit:contain;transform:translateY(-2%)}
@@ -197,12 +200,14 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
       <div class="meter" id="meter"><span></span></div>
     </div>
     <button class="close" id="bClose" aria-label="Свернуть лист">✕</button>
+    <button class="close undo" id="bUndo2" aria-label="Убрать последнюю черту">↶</button>
   </div>
 
   <div class="fb" id="fb"></div>
 
   <div class="bar">
     <button id="bTrace" class="primary">Обвести</button>
+    <button id="bFree">Фристайл</button>
     <button id="bClear">Заново</button>
     <button id="bBrush">Кисть</button>
     <button id="bHint" hidden>Подсказка</button>
@@ -314,6 +319,9 @@ function drawBg(){
   c.moveTo(V/2,T);c.lineTo(V/2,B);c.moveTo(L,V/2);c.lineTo(R,V/2);
   c.moveTo(L,T);c.lineTo(R,B);c.moveTo(R,T);c.lineTo(L,B); c.stroke(); c.setLineDash([]);
   const st=strokesOf(idx);
+  if (mode==='free' && freeImg && freeImg.complete && freeImg.naturalWidth){
+    c.save(); c.globalAlpha=.24; c.drawImage(freeImg,4.5,4.5,100,100); c.restore();
+  }
   if (mode==='trace' && !done){
     ghost(c, st, INK, .11);
     if (cur<st.length){ ghost(c,[st[cur]], HL, .32); startMark(c, st[cur], HL); }
@@ -448,7 +456,7 @@ function endStroke(){
 function showMeter(v,dwell){ const m=$('#meter'); m.querySelector('span').style.width=(v*100).toFixed(0)+'%'; m.classList.toggle('dwell',dwell); }
 
 sheet.addEventListener('pointerdown',e=>{
-  if (!document.body.classList.contains('focus')){ e.preventDefault(); startTracing(); return; }
+  if (!document.body.classList.contains('focus')){ e.preventDefault(); mode==='free'?startFree():startTracing(); return; }
   if (done){ e.preventDefault(); return; }
   e.preventDefault(); sheet.setPointerCapture(e.pointerId); hideFx(); clearTimeout(focusT); beginStroke(e);
 });
@@ -460,13 +468,17 @@ sheet.addEventListener('pointercancel',endStroke);
 
 /* ---------- practice logic ---------- */
 let idx=0, mode='trace', cur=0, tries=0, res=[], done=false, seal=null, fxTimer=0, compare=false, watchRaf=0;
+let freeImg=null;
 function showArt(){ const im=$('#artImg'), k=$('#artK'), c=DATA[idx].k;
+  freeImg=new Image(); freeImg.onload=()=>{ if(mode==='free') drawBg(); }; freeImg.src='calli/'+c.codePointAt(0).toString(16).padStart(5,'0')+'.webp';
   im.hidden=false; k.hidden=true; im.alt=c;
   im.onerror=()=>{ im.hidden=true; k.hidden=false; };
   im.src='calli/'+c.codePointAt(0).toString(16).padStart(5,'0')+'.webp'; }
-function startTracing(){ if(done) reset(); hideFx(); enterFocus(); }
+function setMode(m){ mode=m; document.body.classList.toggle('free',m==='free'); }
+function startTracing(){ if(mode!=='trace'){ setMode('trace'); reset(); } if(done) reset(); hideFx(); enterFocus(); }
+function startFree(){ if(mode!=='free'){ setMode('free'); reset(); } hideFx(); enterFocus(); }
 const MSG={trace:'Коснитесь знака, чтобы обвести его кистью.',memory:'Пишите без образца. Ошибка покажет нужную черту.',
-  free:'Свободное письмо без проверки. Потом откройте образец.',watch:'Коснитесь листа, чтобы повторить. Цвет черты — её часть.'};
+  free:'Фристайл: пишите поверх образца как хотите, без проверки. ↶ убирает последнюю черту, ✕ — готово.',watch:'Коснитесь листа, чтобы повторить. Цвет черты — её часть.'};
 
 /* random order: a shuffled deck, reshuffled after all twenty */
 function newDeck(avoid){ const a=[...Array(DATA.length).keys()];
@@ -484,18 +496,19 @@ function setFocus(on, animate=true){
   if (document.body.classList.contains('focus')===on) return;
   const a=sheet.getBoundingClientRect();
   document.body.classList.toggle('focus',on);
+  if(!on && mode==='free' && inkStrokes.length){ sheet.classList.add('mine'); setFb('Ваш вариант поверх образца. «Обвести» — по чертам, → — следующий знак.','good'); }
   resize();
   const b=sheet.getBoundingClientRect();
   if (!animate || reduceMotion || !b.width || !sheet.animate) return;
   const sx=a.width/b.width, sy=a.height/b.height;
   sheet.animate([{transformOrigin:'0 0',transform:`translate(${a.left-b.left}px,${a.top-b.top}px) scale(${sx},${sy})`},{transformOrigin:'0 0',transform:'none'}],{duration:240,easing:'cubic-bezier(.2,.7,.2,1)'});
 }
-function enterFocus(){ clearTimeout(focusT); setFocus(true); exitFocus(9000); }
+function enterFocus(){ clearTimeout(focusT); setFocus(true); if(mode!=='free') exitFocus(9000); }
 function exitFocus(delay=0, animate=true){ clearTimeout(focusT); if(!delay){ setFocus(false,animate); return; } focusT=setTimeout(()=>setFocus(false),delay); }
 function afterStroke(){
   if (done){ exitFocus(900); return; }
-  if (mode==='free' && inkStrokes.length>=strokesOf(idx).length){ exitFocus(900); return; }
-  exitFocus(mode==='free'?5000:9000);
+  if (mode==='free'){ clearTimeout(focusT); return; }
+  exitFocus(9000);
 }
 
 function evaluate(pts){
@@ -638,7 +651,7 @@ function select(i){
   $('#kBig').textContent=d.k; $('#kRu').textContent=d.ru;
   $('#kRd').innerHTML=`<b>${d.on}</b>${d.kun!=='—'?' · '+d.kun:''}`;
   $('#count').textContent=`${pos%DATA.length+1} / ${DATA.length}`; $('#bPrev').disabled=pos===0;
-  renderParts(); persist(); reset();
+  setMode('trace'); renderParts(); persist(); reset();
 }
 function plural(n){ const a=n%10,b=n%100; return a===1&&b!==11?'черта':a>=2&&a<=4&&(b<10||b>=20)?'черты':'черт'; }
 function persist(){ store._p={size:prefs.size,sens:prefs.sens,mode}; prefs=store._p; delete store._d; delete store._pos; save(); }
@@ -674,6 +687,8 @@ $('#bNext').onclick=next;
 $('#bTrace').onclick=startTracing;
 $('#bPrev').onclick=prev;
 $('#bClose').onclick=()=>exitFocus(0);
+$('#bFree').onclick=startFree;
+$('#bUndo2').onclick=()=>{ inkStrokes.pop(); replayInk(); };
 $('#bBrush').onclick=()=>{ $('#ovBrush').hidden=false; };
 $('#cBrush').onclick=()=>{ $('#ovBrush').hidden=true; };
 $('#bList').onclick=()=>{ buildGrid(); $('#ovList').hidden=false; };
