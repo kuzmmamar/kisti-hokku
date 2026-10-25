@@ -490,14 +490,14 @@ function endStroke(){
     let ang=Math.atan2(live.dir.y/dl, live.dir.x/dl), turn=0;
     if (n>=6){ const a1=Math.atan2(P[n-3].y-P[n-6].y,P[n-3].x-P[n-6].x), a2=Math.atan2(P[n-1].y-P[n-3].y,P[n-1].x-P[n-3].x);
       turn=clamp(Math.atan2(Math.sin(a2-a1),Math.cos(a2-a1)),-.5,.5); }
-    const r0=live.r, L=clamp(live.v*90,2.2,17)*(.75+.25*Math.min(1,r0/(prefs.size/2))), N=Math.max(24,Math.round(L*6));
+    const r0=live.r, L=clamp(live.v*120,3,23)*(.75+.25*Math.min(1,r0/(prefs.size/2))), N=Math.max(34,Math.round(L*7));
     const bw0=r0*2/NB*2.15; let x=live.last.x, y=live.last.y; prepInk(xInk);
     for (let i=1;i<=N;i++){
-      const t=i/N; ang+=turn*.7/N; x+=Math.cos(ang)*L/N; y+=Math.sin(ang)*L/N;
-      const k=Math.pow(Math.cos(t*Math.PI/2),1.25), rr=r0*k, nx=-Math.sin(ang), ny=Math.cos(ang), bw=Math.max(.05,bw0*(.3+.7*k));
+      const t=i/N; ang+=turn*.85/N; x+=Math.cos(ang)*L/N; y+=Math.sin(ang)*L/N;
+      const k=Math.pow(Math.cos(t*Math.PI/2),1.5), rr=r0*k, nx=-Math.sin(ang), ny=Math.cos(ang), bw=Math.max(.05,bw0*(.3+.7*k));
       for (const b of live.br){
         const pos={x:x+nx*b.o*rr, y:y+ny*b.o*rr};
-        const keep = t<.7 || Math.abs(b.o)<.35 || b.thr < 1.6*(1-t)+.2;   // a few outer hairs give out near the tip
+        const keep = t<.78 || Math.abs(b.o)<.4 || b.thr < 1.8*(1-t)+.25;   // a few outer hairs give out near the tip
         if (b.prev && keep){ const op=[0,b.prev.x,b.prev.y,pos.x,pos.y,bw]; live.ops.push(op); drawOp(xInk,op); }
         b.prev=pos;
       }
