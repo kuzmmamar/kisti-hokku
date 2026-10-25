@@ -19,6 +19,7 @@
 @font-face{font-family:"Shippori Mincho B1";src:url(ShipporiB1-500.woff) format("woff");font-weight:500;font-display:swap}
 @font-face{font-family:"Shippori Mincho B1";src:url(ShipporiB1-700.woff) format("woff");font-weight:700;font-display:swap}
 @font-face{font-family:"Golos Text";src:url(../Golos.woff) format("woff");font-weight:400 700;font-display:swap}
+@font-face{font-family:"Yuji Syuku";src:url(YujiSyuku.woff) format("woff");font-display:block}
 html{-webkit-text-size-adjust:100%}
 
 /* Layout: one screen. Character + parts above, the practice sheet fills what is left, tools below. While writing, only the sheet stays. */
@@ -126,7 +127,14 @@ body.focus .close{display:block}
 .prog{display:inline-flex;gap:3px;vertical-align:middle;margin-right:8px}
 .prog i{width:10px;height:5px;border-radius:2px;background:var(--line)}
 .prog i.d{background:var(--ok)}.prog i.m{background:var(--shu)}.prog i.c{background:var(--accent)}
-.bar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bar .primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.art{position:absolute;inset:0;z-index:1;display:grid;place-items:center;background:#F8F6EF;cursor:pointer;transition:opacity .2s ease}
+.artK{font-family:"Yuji Syuku","Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;font-size:calc(min(100cqw,100cqh)*.74);line-height:1;color:#121212;transform:translateY(-3%)}
+.art small{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:12px;color:#7B7F78}
+.artSeal{position:absolute;right:7%;bottom:9%;width:15%;aspect-ratio:1;display:grid;place-items:center;background:rgba(184,53,42,.9);color:#F8F6EF;font-family:"Shippori Mincho B1",serif;font-weight:700;font-size:calc(min(100cqw,100cqh)*.1);transform:rotate(-4deg)}
+body.focus .art,.sheet.peek .art{opacity:0;pointer-events:none}
+.artSeal:not([hidden])~small{display:none}
 .bar button{padding:7px 4px;font-size:13.5px}
 
 /* overlays */
@@ -184,6 +192,7 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
   <div class="stage">
     <div class="sheet" id="sheet">
       <canvas id="cBg"></canvas><canvas id="cInk"></canvas><canvas id="cFx"></canvas>
+      <div class="art" id="art"><span class="artK" id="artK"></span><b class="artSeal" id="artSeal" hidden></b><small>Коснитесь, чтобы обвести</small></div>
       <div class="meter" id="meter"><span></span></div>
     </div>
     <button class="close" id="bClose" aria-label="Свернуть лист">✕</button>
@@ -192,10 +201,11 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
   <div class="fb" id="fb"></div>
 
   <div class="bar">
-    <button id="bHint">Подсказка</button>
-    <button id="bCompare">Образец</button>
+    <button id="bTrace" class="primary">Обвести</button>
     <button id="bClear">Заново</button>
     <button id="bBrush">Кисть</button>
+    <button id="bHint" hidden>Подсказка</button>
+    <button id="bCompare" hidden>Образец</button>
   </div>
 </div>
 
@@ -437,9 +447,8 @@ function endStroke(){
 function showMeter(v,dwell){ const m=$('#meter'); m.querySelector('span').style.width=(v*100).toFixed(0)+'%'; m.classList.toggle('dwell',dwell); }
 
 sheet.addEventListener('pointerdown',e=>{
+  if (!document.body.classList.contains('focus')){ e.preventDefault(); startTracing(); return; }
   if (done){ e.preventDefault(); return; }
-  if (mode==='watch'){ playOrder(); return; }
-  if (!document.body.classList.contains('focus')){ e.preventDefault(); hideFx(); enterFocus(); return; }
   e.preventDefault(); sheet.setPointerCapture(e.pointerId); hideFx(); clearTimeout(focusT); beginStroke(e);
 });
 sheet.addEventListener('pointermove',e=>{ if(live){ e.preventDefault(); moveStroke(e);} });
@@ -450,7 +459,8 @@ sheet.addEventListener('pointercancel',endStroke);
 
 /* ---------- practice logic ---------- */
 let idx=0, mode='trace', cur=0, tries=0, res=[], done=false, seal=null, fxTimer=0, compare=false, watchRaf=0;
-const MSG={trace:'Обводите подсвеченную черту от точки со стрелкой.',memory:'Пишите без образца. Ошибка покажет нужную черту.',
+function startTracing(){ if(done) reset(); hideFx(); enterFocus(); }
+const MSG={trace:'Коснитесь знака, чтобы обвести его кистью.',memory:'Пишите без образца. Ошибка покажет нужную черту.',
   free:'Свободное письмо без проверки. Потом откройте образец.',watch:'Коснитесь листа, чтобы повторить. Цвет черты — её часть.'};
 
 /* random order: a shuffled deck, reshuffled after all twenty */
@@ -515,7 +525,7 @@ function flashStroke(i){
     if(k<1) fxTimer=requestAnimationFrame(anim); else fxTimer=setTimeout(clearFx,900); };
   fxTimer=requestAnimationFrame(anim);
 }
-function hideFx(){ cancelAnimationFrame(fxTimer); clearTimeout(fxTimer); cancelAnimationFrame(watchRaf); compare=false;
+function hideFx(){ sheet.classList.remove('peek'); cancelAnimationFrame(fxTimer); clearTimeout(fxTimer); cancelAnimationFrame(watchRaf); compare=false;
   if(partOn>=0){ partOn=-1; document.querySelectorAll('.pt').forEach(b=>b.setAttribute('aria-pressed','false')); document.querySelectorAll('#orig li').forEach(li=>li.classList.remove('sel')); }
   $('#bCompare').setAttribute('aria-pressed','false'); clearFx(); }
 
@@ -526,9 +536,9 @@ function finish(){
   const k=DATA[idx].k, rec=store[k]||(store[k]={});
   rec[mode]=Math.max(rec[mode]||0,score); rec.runs=(rec.runs||0)+1; save();
   const label=g?{'優':'отлично','良':'хорошо','可':'зачёт'}[g]:'ещё раз';
-  setFb(`${score} из 100 · ${first} из ${n} с первой попытки · ${label}. «Заново» — написать ещё раз, → — следующий знак.`, g?'good':'bad');
+  setFb(`${score} из 100 · ${first} из ${n} с первой попытки · ${label}. Коснитесь знака, чтобы написать ещё раз, → — следующий знак.`, g?'good':'bad');
   $('#bNext').classList.add('pulse');
-  if (g){ seal=g; drawSeal(g); }
+  if (g){ seal=g; drawSeal(g); const as=$('#artSeal'); as.textContent=g; as.hidden=false; }
 }
 function drawSeal(ch){
   const c=xFx, s=16, x=VX0+VW-22, y=V-22;
@@ -576,7 +586,7 @@ function showWhy(){ const d=DATA[idx], w=$('#why'); w.textContent=d.why;
 function showPart(j){
   const was=partOn; hideFx();
   if (was===j){ return; }
-  partOn=j; document.querySelectorAll('.pt').forEach((b,k)=>b.setAttribute('aria-pressed',k===j));
+  partOn=j; sheet.classList.add('peek'); document.querySelectorAll('.pt').forEach((b,k)=>b.setAttribute('aria-pressed',k===j));
   const st=strokesOf(idx), p=DATA[idx].parts[j];
   document.querySelectorAll('#orig li').forEach((li,k)=>li.classList.toggle('sel',k===j));
   ghost(xFx, st, INK, .10);
@@ -608,7 +618,7 @@ function setFb(t,cls){
   f.appendChild(document.createTextNode(t||MSG[mode]));
 }
 function reset(){
-  hideFx(); seal=null; clearFx(); exitFocus(0,false);
+  hideFx(); seal=null; clearFx(); exitFocus(0,false); $('#artSeal').hidden=true; $('#artK').textContent=DATA[idx].k;
   inkStrokes=[]; live=null; cur=0; tries=0; res=[]; done=false;
   $('#bNext').classList.remove('pulse');
   replayInk(); drawBg(); setFb('');
@@ -655,6 +665,7 @@ $('#bCompare').onclick=()=>{
   hideFx(); compare=true; $('#bCompare').setAttribute('aria-pressed','true'); ghost(xFx, strokesOf(idx), HL, .38); if(seal) drawSeal(seal);
 };
 $('#bNext').onclick=next;
+$('#bTrace').onclick=startTracing;
 $('#bPrev').onclick=prev;
 $('#bClose').onclick=()=>exitFocus(0);
 $('#bBrush').onclick=()=>{ $('#ovBrush').hidden=false; };
