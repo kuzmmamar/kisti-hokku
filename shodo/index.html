@@ -66,7 +66,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 body.focus .top,body.focus .modes,body.focus .parts,body.focus .fb,body.focus .bar{opacity:0;pointer-events:none}
 .stage{position:relative}
 body.focus .stage{position:fixed;inset:0;z-index:15;background:var(--bg);box-sizing:border-box;
-  padding:max(56px,calc(env(safe-area-inset-top,0px) + 50px)) env(safe-area-inset-right,0px) max(8px,env(safe-area-inset-bottom,0px)) env(safe-area-inset-left,0px)}
+  padding:max(56px,calc(env(safe-area-inset-top,0px) + 50px)) env(safe-area-inset-right,0px) calc(max(8px,env(safe-area-inset-bottom,0px)) + 58px) env(safe-area-inset-left,0px)}
+.modeSw{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:2;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--surface);width:min(340px,calc(100% - 24px));box-sizing:border-box}
+.modeSw button{border:0;background:transparent;min-height:40px;font-size:14.5px}
+.modeSw button[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
+body.focus .modeSw{display:grid}
 body.focus .sheet{width:min(100cqw,100cqh);height:min(100cqh,calc(min(100cqw,100cqh)*1.348));aspect-ratio:auto;border-radius:0;box-shadow:none}
 .close{display:none;position:absolute;top:max(10px,env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));z-index:2;
   width:40px;height:40px;padding:0;border-radius:20px;font-size:16px;line-height:1}
@@ -137,7 +141,7 @@ body.focus.free .sealBtn{display:block}
 .prog{display:inline-flex;gap:3px;vertical-align:middle;margin-right:8px}
 .prog i{width:10px;height:5px;border-radius:2px;background:var(--line)}
 .prog i.d{background:var(--ok)}.prog i.m{background:var(--shu)}.prog i.c{background:var(--accent)}
-.bar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .bar .primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 .art{position:absolute;inset:0;z-index:1;display:grid;place-items:center;background:#F8F6EF;cursor:pointer;transition:opacity .2s ease}
 .artImg{width:90%;height:90%;object-fit:contain;transform:translateY(-2%)}
@@ -208,15 +212,16 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
     </div>
     <button class="close" id="bClose" aria-label="Свернуть лист">✕</button>
     <button class="close undo" id="bUndo2" aria-label="Убрать последнюю черту">↶</button>
-    <button class="sealBtn" id="bSeal" aria-label="Поставить печать 空 и завершить"></button>
+    <button class="sealBtn" id="bSeal" aria-label="Поставить печать 宇宙空 и завершить"></button>
+    <div class="modeSw" id="modeSw" role="group" aria-label="Режим письма"><button data-m="trace">Каллиграфия</button><button data-m="free">Фристайл</button></div>
     <div class="stampHint" id="stampHint" hidden>Коснитесь листа там, где поставить печать</div>
   </div>
 
   <div class="fb" id="fb"></div>
 
   <div class="bar">
-    <button id="bTrace" class="primary">Обвести</button>
-    <button id="bFree">Фристайл</button>
+    <button id="bTrace" class="primary" hidden>Обвести</button>
+    <button id="bFree" hidden>Фристайл</button>
     <button id="bClear">Заново</button>
     <button id="bBrush">Кисть</button>
     <button id="bHint" hidden>Подсказка</button>
@@ -290,7 +295,7 @@ const sheet=$('#sheet'), cBg=$('#cBg'), cInk=$('#cInk'), cFx=$('#cFx');
 const xBg=cBg.getContext('2d'), xInk=cInk.getContext('2d'), xFx=cFx.getContext('2d');
 let S=400, K=S/V, KY=K, SH=S, DPR=1, VX0=0, VW=V;
 function resize(){
-  const r=sheet.getBoundingClientRect(); if(!r.width) return; S=r.width; SH=r.height; DPR=Math.min(window.devicePixelRatio||1,3);
+  const r={width:sheet.offsetWidth,height:sheet.offsetHeight}; if(!r.width) return; S=r.width; SH=r.height; DPR=Math.min(window.devicePixelRatio||1,3);
   const zoom=document.body.classList.contains('focus'); VX0=zoom?6:0; VW=zoom?97:V; K=S/VW; KY=SH/V;
   for (const c of [cBg,cInk,cFx]){ c.width=Math.round(S*DPR); c.height=Math.round(SH*DPR); c.getContext('2d').setTransform(DPR*K,0,0,DPR*KY,-VX0*K*DPR,0); }
   drawBg(); replayInk(); clearFx();
@@ -339,25 +344,25 @@ function drawBg(){
 function clearFx(){ xFx.save(); xFx.setTransform(1,0,0,1,0,0); xFx.clearRect(0,0,cFx.width,cFx.height); xFx.restore(); if(seal) drawSeal(seal); if(kuSeal) drawKuSeal(xFx); }
 /* personal seal: 空 in seal script, white on cinnabar (空 — emptiness, sky, cosmos; Кузьма ← κόσμος) */
 let kuSeal=false;
-const KU=(()=>{ try{ const t=JSON.parse(JSON.stringify(ANC['空'].strip.find(g=>g.l==='seal'))); return t; }catch(e){ return null; } })();
+const KU=[{"d":["m195.8 24.9c8.1 1.3 10.4 4.7 9.4 12.5-.57 4.5-.58 9.0-.64 13.6-.03 2.3 1.1 3.2 3.7 3.3 14.8.31 29.7.65 44.5 1.4 6.6.37 13.3 1.4 19.8 2.9 16.9 3.9 25.5 16.0 29.7 32.0 3.3 12.3 4.2 24.9 4.7 37.5.43 12.3.5 24.6.51 36.9.04 67.8.02 135.6 0 203.5 0 1.8.81 4.3-2.3 4.5-2.9.17-6.7 3.0-8.4-1.9-.99-3.0-1.8-6.2-2.1-9.3-.37-3.8-.06-7.8-.09-11.7-.35-55.0-.58-110.1-1.1-165.1-.26-26.5-.94-53.0-1.8-79.5-.19-5.4-1.9-11-3.8-16.1-4.1-10.9-13.7-14.9-24.1-17.6-11.1-2.8-22.5-3.2-33.9-3.2-25.5.16-51.0.47-76.5 1.0-12.0.26-23.8 2.2-34.7 7.7-1.3.68-2.6 1.6-3.6 2.8-6.0 7.3-9.3 15.8-9.6 25.2-1.1 40.0-2.3 80.0-2.9 120.1-.74 45.8-.89 91.7-1.3 137.6-.03 2.5-.59 5.1-1.1 7.5-.57 2.5-2.3 3.8-5.0 4.1-2.9.31-4.7-.54-5.7-3.6-3.2-10.4-3.5-21.1-3.3-31.8.94-55.0 1.8-110.1 2.8-165.1.32-18.0.69-36.0 1.2-54.0.46-16.1 3.9-31.7 11.3-46.1 1.1-2.1 3.0-4.0 4.7-5.8 5.8-6.1 13.2-8.1 21.5-9.1 20.0-2.3 39.9-5.2 60.1-4.0 2.7.16 3.3-.96 3.6-3.4.72-6.8 1.6-13.7 2.6-20.6.3-2.0 1.2-4.0 1.8-6.1z","m204.3 169.7c0 6.2-.08 11.9.08 17.6.02.9.9 2.0 1.7 2.5 4.6 2.8 9.1 6.2 14.2 8.1 13.8 4.9 19.9 15.5 21.8 29.1 1.8 13.1-.82 26.0-3.5 38.8-4.9 23.2-9.9 46.5-15.3 69.7-2.6 11.4-6.1 22.6-9.2 33.9-.82 2.9-3.0 4.1-5.9 4.5-2.9.39-3.8-1.7-4.7-3.7-2-4.5-1.8-9.2-.34-13.7 11.2-34.0 16.3-69.5 24.0-104.4 1.9-8.9 3.2-18.0 1.1-27.2-1.7-7.7-6.4-12.5-13.8-14.9-2.1-.68-4.2-1.2-6.4-1.9-9.7-3.1-14.9-9.9-16.7-19.8-.89-5.0-2.2-10.0-3.3-15.0-.6-2.7-2.0-3.6-4.9-3.6-16.1.15-32.2.17-48.3-.01-3.5-.04-7.1-.81-10.5-1.7-3.5-.95-4.8-3.7-4.0-7.3.14-.59.4-1.4.91-1.6 4.1-1.4 8.4-3.8 12.6-3.8 36.7-.3 73.4-.19 110.1-.16 7.1.01 14.3.06 21.4.37 2.5.11 5.0.82 7.4 1.7 2.7 1.0 3.9 3.4 4.2 6.3.19 1.8-.32 3.0-2.1 3.9-8.6 4.1-17.8 4.3-27.2 3.9-12.9-.61-25.9-1.0-38.8-1.4-1.2-.06-2.4-.02-4.1-.02z","m196.0 126.7c-15.8-.33-31.7-.69-47.5-.94-2.8-.04-4.1-1.7-4.6-3.9-.49-2.2-.31-4.3 2.5-5.7 5.2-2.5 10.5-3.6 16.4-3.5 21.6.24 43.3.03 65.0.14 6.6.03 13.3.5 20.0.86 1.1.06 2.4.4 3.5.94 3 1.5 3.5 4.2 3.6 7.3.07 2.9-2.2 3.3-4.0 4.1-6.5 2.8-13.4 1.6-20.2 1.6-11.6.1-23.2.03-34.8.03 0-.32 0-.63 0-.93z"],"v":"86 25 221 350","box":[0.52,0.1,0.38,0.38]},{"d":["m195.0 24.9c8 1.5 11.2 5.1 10.9 11.9-.18 4.1-1.0 8.2-1.5 12.3-.1.7-.22 1.5-.28 2.3-.86 10.4-.26 11.1 10.0 11.0 17.3-.1 34.7-.18 51.8 2.7 5.5.95 11.1 2.4 16.5 4.2 11.7 4.0 17.3 13.6 20.7 24.6 1.8 6.2 2.8 12.8 3.3 19.4 3.5 56.6 3.0 113.4 3.5 170.1.26 28.8-.5 57.7-.8 86.6-.01.6 0 1.3 0 2.4-2.6.55-5.1 1.2-7.8 1.5-.69.0-1.9-.81-2.1-1.5-1.0-3.1-2.3-6.3-2.6-9.5-.48-5.6-.3-11.4-.34-17.1-.41-52.9-.67-105.8-1.2-158.8-.28-24.5-1.2-48.9-1.8-73.4-.26-9.5-3.0-18.2-9.2-25.7-.99-1.2-2.4-2.2-3.9-2.7-7.3-2.1-14.5-4.4-22.0-5.8-5.5-1.0-11.3-.87-17.0-1.0-18.5-.51-37.1-1.0-55.6-1.2-5-.07-10.0.99-15.0 1.2-8.6.3-17.2.58-25.8.7-10.7.15-20.7 2.9-30.2 7.8-1.1.6-2.1 1.8-2.8 3.0-6.0 11.0-9.3 23-9.5 35.6-.37 23.5-.55 47-.76 70.5-.47 53.9-.88 107.8-1.4 161.8-.04 4.2-.59 8.4-1.3 12.5-.45 2.6-2.3 4.2-5.1 4.4-2.5.1-4.3-.6-5.3-3.3-3.5-10.1-3.9-20.6-3.7-31.1.78-37.1 1.7-74.2 2.4-111.4.49-26.8.28-53.7 1-80.5.27-10.0 2.4-19.9 3.4-29.9 1.0-10.3 2.3-20.6 6.0-30.5 1.1-3.1 2.3-6.2 3.7-9.3.52-1.1 1.6-2.1 2.6-2.8 11.2-7.4 23.9-9.5 37.1-11.0 15.9-1.7 31.8-3.0 47.8-2.4 3.1.11 3.1-2.1 3.2-3.9.38-5.8.2-11.6.77-17.4.51-5.4 1.6-10.7 2.5-16.3z","m195.7 88.1c6.7 1.1 10.3 4.7 10.1 10.8-.13 5.3-1.2 10.6-1.6 15.9-.22 3.5.16 7.1.37 10.6.1 1.7 1.0 2.5 2.9 2.8 6.9 1.2 13.8 2.6 20.7 4.0 12.0 2.3 19.8 10 25.4 20.4 6.4 12 9.1 24.9 9.4 38.3.46 19.3-1.2 38.4-7.7 56.8-1.5 4.4-3.3 8.8-5.7 12.8-1.5 2.5-4.2 4.5-6.6 6.3-10.6 7.7-22.7 11.3-35.6 12.5-18.2 1.6-36.1-.08-53.1-7.7-4.1-1.8-7.3-4.6-10.4-7.9-10.6-11.3-14.1-25.3-15.4-40.1-1.8-21.4-1.1-42.6 4.9-63.5 4.3-14.5 14.2-23.9 28.3-28.3 6.8-2.0 14.3-1.8 21.6-2.5 6.9-.6 7.1-.76 7.7-7.8.79-9.2 1.6-18.4 2.7-27.6.24-2.0 1.1-4.0 1.8-6.1zm-52.2 119.2c-1.1 15.5.77 30.5 8.2 44.4 1.8 3.3 4.0 5.5 7.7 6.6 4.0 1.2 7.9 2.9 11.9 4.4 5.6 2.1 11.4 2.5 17.4 1.2 1.9-.45 2.4-1.3 2.4-3.2-.22-13.0-.35-26.1-.48-39.2-.05-4.6-.01-9.2-.01-14.3-16.1 0-31.5 0-47.3 0zm61.9 57.3c11.4-.16 21.9-2.1 30.6-9.5 1.9-1.6 3.9-3.9 4.6-6.3 2.7-9.1 5.3-18.4 7.2-27.8.74-3.6-.38-7.7-.8-11.5-.22-1.9-1.3-2.6-3.5-2.5-7.5.44-15.2.5-22.8.9-5.1.21-10.2.52-15.4.79.0 18.7.0 37.1.01 56.0zm-14.0-73.6c0-13.4.1-25.8-.09-38.2-.04-2.3-.92-4.8-1.9-7.0-.55-1.1-2.3-2.4-3.5-2.3-8.2.54-16.4 1.7-24.1 5.1-8.1 3.6-14.2 9.0-15.6 18.5-.3 2.0-1.1 4.0-1.6 6.1-1.3 5.8-1.9 11.6-.27 17.6.77.0 1.4.2 2.0.2 14.8.02 29.7.01 45.1.01zm55.4-.5c5.2-26.5-16.8-51.3-40.6-46.1v46.1z"],"v":"85 25 225 350","box":[0.52,0.52,0.38,0.38]},{"d":["m298.4 373.6c-3.0-10.9-4.3-21.5-4.5-32.3-.21-13.0-1.1-26.1-1.5-39.2-1.1-44.6-2.2-89.2-3.2-133.9-.08-3.4-.01-6.9-.01-10.7-10.1-2.0-20.0-3.7-29.7-6.2-9.0-2.3-18.1-4.8-26.7-8.3-12.7-5.3-18.5-15.8-19.2-29.3-.6-10.5-1.2-21.1-1.9-32.2-6-.26-12.5-.55-19.1-.83-5.6-.24-5.8-.25-6.3 5.3-.51 5.4-1.2 10.9-.75 16.4 1.5 19.3-8.7 29.5-23.4 35.7-14.2 6.0-29.2 8.7-44.5 10.6-3.6.45-7.3.82-11.2 1.2-.28 4.7-.66 9.2-.79 13.8-1.2 44.6-2.5 89.2-3.5 133.9-.45 19.2-.27 38.4-.55 57.7-.05 3.7-.48 7.6-1.4 11.2-1.1 4.1-4.2 6.8-8.5 7.7-.98.2-2.6-.42-3.2-1.2-2.5-3.4-2.9-7.6-2.7-11.8.92-16.0 2.1-32.1 2.6-48.2.77-23.6 1.1-47.2 1.5-70.8.59-33.9 1.0-67.8 1.5-101.7.13-9.1-.6-18.4.25-27.5.82-8.7 2.6-17.4 5.1-25.8.89-2.9 4.8-5.3 7.8-7.3 9.8-6.7 21.0-9.9 32.7-10.9 15.4-1.2 31.0-1.5 46.5-2.2 2.4-.11 4.9-.22 7.5-.34 2.6-13.5-1.2-27.9 5.5-40.8 6.6.42 10.9 5.0 10.6 12.4-.28 6.4-1.4 12.8-2.1 19.3-.25 2.6-.04 5.3-.04 8.3 2.5.18 4.7.36 6.9.49 14.9.9 29.9 1.6 44.8 2.7 5.5.41 11.0 1.5 16.5 2.5 17.3 3.1 27.6 13.7 30.4 30.9 1.5 9.5 1.8 19.4 1.3 29.0-1.7 29.1-.6 58.1-.37 87.2.2 25.7.42 51.4 1.0 77.2.26 10.2 1.9 20.4 2.5 30.7.88 14.1 1.6 28.3-.15 42.5-.37 2.9-1.2 4.4-4.3 4.3-1.7-.12-3.5.1-5.4.25zm-9.5-231.9c0-1.6 0-2.8 0-4.0 0-10.8-.26-21.7.1-32.5.19-5.5-1.6-9.9-5.6-13.3-2.9-2.4-6.1-5.3-9.7-6.2-8.3-1.9-16.8-3.2-25.3-4.0-7.1-.64-14.4-.13-21.9-.13-.26 10.6-1.2 21.1 1.2 31.4 2.1 8.7 6.5 15.7 16.0 18.4 6 1.7 11.7 4.2 17.7 6.0 8.7 2.6 17.7 4.2 27.6 4.2zm-116.6-59.5c-12.4-1.5-24.3-.5-36.4.9-9.6 1.1-18.6 3.5-26.3 9.7-.96.7-2 2.0-2.1 3.1-1.1 8.5-2.4 17.0-3 25.6-.3 4.8.78 9.8 1.2 14.9 5.0-1.0 9.1-1.9 13.3-2.8 13.4-2.9 26.9-5.3 39.5-11.2 7.0-3.3 11.5-7.7 12.3-15.7.86-8.0 3.1-16.0 1.3-24.5z","m203.8 266.9c6.9 0 13.6-.06 20.3.01 12.0.14 24.1.23 36.2.62 3.6.12 7.3.92 10.8 1.8 1.8.49 3.7 1.6 4.9 3.1 3.2 3.6 2.5 6.3-1.7 8.3-5.7 2.7-11.9 3.8-18.2 3.7-31.9-.5-63.9-1.0-95.9-1.5-11.9-.2-23.9-.43-35.8-.63-3.2-.06-5.3-1.9-5.8-5.1-.46-3.4 1.0-6.2 4.2-6.7 8.3-1.2 16.7-2.6 25.2-3 13.2-.5 26.6-.13 40.4-.13.6-18.0 1.1-35.9 1.8-54.6-6.7 0-13.2.1-19.6-.02-10.8-.23-21.6-.54-32.5-1-2.1-.09-4.3-.84-6.5-1.5-2.5-.79-3.6-2.6-3.8-5.2-.17-2.4.73-4.1 3.0-4.8 2.3-.71 4.8-1.8 7.2-1.8 32.0-.12 64.0-.05 96.0-.1 7.0-.01 14.0-.39 21.1-.39 6.1-.01 9.9 2.6 11.1 7.2.56 2.0.21 3.2-1.9 4.0-9.3 3.6-18.9 3.7-28.7 3.1-8.0-.56-16.0-.96-24.1-.95-5.2.01-5.2.4-5.5 5.6-.75 15.4-1.5 30.8-2.2 46.2-.04.9 0 1.9 0 3.8z"],"v":"86 26 223 349","box":[0.1,0.1,0.38,0.8]}];  /* 宇宙空 — «космическая пустота»: справа 宇 宙, слева 空 */
 function rnd(seed){ return ()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; }; }
 function drawKuSeal(ctx){
-  if(!KU) return;
-  const s=17, sh=s*K/KY, x=clamp(kuSeal.x-s/2,VX0+1,VX0+VW-s-1), y=clamp(kuSeal.y-sh/2,1,V-sh-1), r=rnd(7);
+    const s=17, sh=s*K/KY, x=clamp(kuSeal.x-s/2,VX0+1,VX0+VW-s-1), y=clamp(kuSeal.y-sh/2,1,V-sh-1), r=rnd(7);
   ctx.save();
   ctx.fillStyle='rgba(178,34,26,.93)';
   ctx.beginPath(); ctx.moveTo(x+.3,y); ctx.lineTo(x+s-.2,y+.2); ctx.lineTo(x+s,y+sh-.3); ctx.lineTo(x+.2,y+sh); ctx.closePath(); ctx.fill();
-  const [vx,vy,vw,vh]=KU.v.split(' ').map(Number), pad=.14;
-  ctx.save(); ctx.translate(x+pad*s,y+pad*sh); ctx.scale(s*(1-2*pad)/vw, sh*(1-2*pad)/vh); ctx.translate(-vx,-vy);
-  ctx.fillStyle=PAPER; ctx.strokeStyle=PAPER; ctx.lineWidth=13; ctx.lineJoin='round'; KU.d.forEach(d=>{ const p=new Path2D(d); ctx.fill(p); ctx.stroke(p); }); ctx.restore();
+  KU.forEach(g=>{ const [vx,vy,vw,vh]=g.v.split(' ').map(Number), [bx,by,bw,bh]=g.box;
+    ctx.save(); ctx.translate(x+bx*s,y+by*sh); ctx.scale(s*bw/vw, sh*bh/vh); ctx.translate(-vx,-vy);
+    ctx.fillStyle=PAPER; ctx.strokeStyle=PAPER; ctx.lineWidth=16; ctx.lineJoin='round'; g.d.forEach(d=>{ const p=new Path2D(d); ctx.fill(p); ctx.stroke(p); }); ctx.restore(); });
   ctx.fillStyle=PAPER;   /* worn stone: tiny gaps along the edge */
   for(let i=0;i<14;i++){ const side=i%4, t=r(), rad=.15+r()*.35;
     const px= side===0? x+t*s : side===1? x+s : side===2? x+t*s : x, py= side===0? y : side===1? y+t*sh : side===2? y+sh : y+t*sh;
     ctx.beginPath(); ctx.arc(px,py,rad,0,7); ctx.fill(); }
   ctx.restore();
 }
-function sealSvg(){ if(!KU) return '';
-  return `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="1" y="1" width="98" height="98" rx="3" fill="#B2221A"/><svg x="14" y="14" width="72" height="72" viewBox="${KU.v}" preserveAspectRatio="none"><g fill="#F8F6EF" stroke="#F8F6EF" stroke-width="13" stroke-linejoin="round">${KU.d.map(d=>`<path d="${d}"/>`).join('')}</g></svg></svg>`; }
+function sealSvg(){
+  return `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="1" y="1" width="98" height="98" rx="3" fill="#B2221A"/>`+
+    KU.map(g=>`<svg x="${g.box[0]*100}" y="${g.box[1]*100}" width="${g.box[2]*100}" height="${g.box[3]*100}" viewBox="${g.v}" preserveAspectRatio="none"><g fill="#F8F6EF" stroke="#F8F6EF" stroke-width="16" stroke-linejoin="round">${g.d.map(d=>`<path d="${d}"/>`).join('')}</g></svg>`).join('')+`</svg>`; }
 
 /* ---------- brush engine ---------- */
 /* ops: [0,x0,y0,x1,y1,w] bristle line · [1,x,y,r] solid dab · [2,x,y,r,a] ink bleed */
@@ -505,11 +510,12 @@ function showArt(){ const im=$('#artImg'), k=$('#artK'), c=DATA[idx].k;
   im.hidden=false; k.hidden=true; im.alt=c;
   im.onerror=()=>{ im.hidden=true; k.hidden=false; };
   im.src='calli/'+c.codePointAt(0).toString(16).padStart(5,'0')+'.webp'; }
-function setMode(m){ mode=m; document.body.classList.toggle('free',m==='free'); }
+function setMode(m){ mode=m; document.body.classList.toggle('free',m==='free'); document.querySelectorAll('#modeSw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m)); }
+function switchMode(m){ if(m===mode) return; const open=document.body.classList.contains('focus'); setMode(m); reset(open); if(open){ if(m==='trace') exitFocus(9000); } else enterFocus(); }
 function startTracing(){ if(mode!=='trace'){ setMode('trace'); reset(); } if(done) reset(); hideFx(); enterFocus(); }
 function startFree(){ if(mode!=='free'){ setMode('free'); reset(); } hideFx(); enterFocus(); }
-const MSG={trace:'Коснитесь знака, чтобы обвести его кистью.',memory:'Пишите без образца. Ошибка покажет нужную черту.',
-  free:'Фристайл: пишите поверх образца как хотите, без проверки. ↶ убирает последнюю черту, печать 空 завершает работу.',watch:'Коснитесь листа, чтобы повторить. Цвет черты — её часть.'};
+const MSG={trace:'Коснитесь знака, чтобы писать кистью.',memory:'Пишите без образца. Ошибка покажет нужную черту.',
+  free:'Фристайл: пишите поверх образца как хотите, без проверки. ↶ убирает последнюю черту, печать 宇宙空 завершает работу.',watch:'Коснитесь листа, чтобы повторить. Цвет черты — её часть.'};
 
 /* random order: a shuffled deck, reshuffled after all twenty */
 function newDeck(avoid){ const a=[...Array(DATA.length).keys()];
@@ -527,7 +533,7 @@ function setFocus(on, animate=true){
   if (document.body.classList.contains('focus')===on) return;
   const a=sheet.getBoundingClientRect();
   document.body.classList.toggle('focus',on);
-  if(!on && mode==='free' && inkStrokes.length){ sheet.classList.add('mine'); setFb(kuSeal?'Работа скреплена печатью 空. «Обвести» — по чертам, → — следующий знак.':'Ваш вариант поверх образца. «Обвести» — по чертам, → — следующий знак.','good'); }
+  if(!on && mode==='free' && inkStrokes.length){ sheet.classList.add('mine'); setFb(kuSeal?'Работа скреплена печатью 宇宙空. «Обвести» — по чертам, → — следующий знак.':'Ваш вариант поверх образца. «Обвести» — по чертам, → — следующий знак.','good'); }
   resize();
   const b=sheet.getBoundingClientRect();
   if (!animate || reduceMotion || !b.width || !sheet.animate) return;
@@ -667,10 +673,10 @@ function setFb(t,cls){
   }
   f.appendChild(document.createTextNode(t||MSG[mode]));
 }
-function reset(){
+function reset(keep){
   if(typeof armStamp==="function") armStamp(false);
   kuSeal=false;
-  hideFx(); seal=null; clearFx(); exitFocus(0,false); sheet.classList.remove('mine'); $('#artSeal').hidden=true; $('#artK').textContent=DATA[idx].k; showArt();
+  hideFx(); seal=null; clearFx(); if(keep) clearTimeout(focusT); else exitFocus(0,false); sheet.classList.remove('mine'); $('#artSeal').hidden=true; $('#artK').textContent=DATA[idx].k; showArt();
   inkStrokes=[]; live=null; cur=0; tries=0; res=[]; done=false;
   $('#bNext').classList.remove('pulse');
   replayInk(); drawBg(); setFb('');
@@ -721,6 +727,7 @@ $('#bTrace').onclick=startTracing;
 $('#bPrev').onclick=prev;
 $('#bClose').onclick=()=>exitFocus(0);
 $('#bFree').onclick=startFree;
+document.querySelectorAll('#modeSw button').forEach(b=>b.onclick=()=>switchMode(b.dataset.m));
 $('#bUndo2').onclick=()=>{ inkStrokes.pop(); replayInk(); };
 $('#bSeal').innerHTML=sealSvg();
 let stampMode=false;
@@ -737,7 +744,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySele
 
 document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===mode));
 document.querySelectorAll('.sizes button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.s===prefs.size));
-resize(); select(deck[pos]);
+resize(); select(deck[pos]); setMode('trace');
 </script>
 <script>
 if('serviceWorker' in navigator){addEventListener('load',()=>{
