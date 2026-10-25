@@ -47,15 +47,14 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 
 .app{min-height:100%;max-width:640px;margin:0 auto;display:grid;gap:10px;
   grid-template-columns:minmax(0,1fr);
-  grid-template-rows:auto auto auto minmax(150px,1fr) auto auto;
-  grid-template-areas:"top" "modes" "parts" "stage" "fb" "bar"}
+  grid-template-rows:auto auto minmax(150px,1fr) auto auto;
+  grid-template-areas:"top" "parts" "stage" "fb" "bar"}
 @media (min-width:880px) and (min-aspect-ratio:5/4){
   .app{max-width:1180px;column-gap:28px;grid-template-columns:minmax(0,1fr) 360px;
-    grid-template-rows:auto auto auto auto auto 1fr;
-    grid-template-areas:"stage top" "stage modes" "stage parts" "stage fb" "stage bar" "stage ."}
+    grid-template-rows:auto auto auto auto 1fr;
+    grid-template-areas:"stage top" "stage parts" "stage fb" "stage bar" "stage ."}
 }
 .top{grid-area:top;display:flex;align-items:center;gap:10px;min-width:0}
-.modes{grid-area:modes}
 .parts{grid-area:parts;display:flex;flex-direction:column;gap:6px;min-width:0}
 .stage{grid-area:stage;min-height:0;container-type:size;display:grid;place-items:center}
 .fb{grid-area:fb}
@@ -173,12 +172,6 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
     <button class="navb next" id="bNext" aria-label="Следующий знак">→</button>
   </div>
 
-  <div class="modes seg" role="group" aria-label="Режим">
-    <button data-m="watch">Порядок</button>
-    <button data-m="trace">Обводка</button>
-    <button data-m="memory">По памяти</button>
-    <button data-m="free">Свободно</button>
-  </div>
 
   <div class="parts">
     <div class="formula" id="formula"></div>
@@ -227,7 +220,7 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
   <div class="panel" role="dialog" aria-label="Все знаки">
     <div class="ph"><h2>Все знаки</h2><button id="cList">Закрыть</button></div>
     <div class="grid20" id="grid20"></div>
-    <div class="src">Печать на карточке — лучшая оценка за письмо по памяти.</div>
+    <div class="src">Печать на карточке — лучшая оценка за знак.</div>
   </div>
 </div>
 
@@ -456,7 +449,7 @@ sheet.addEventListener('pointercancel',endStroke);
 
 
 /* ---------- practice logic ---------- */
-let idx=0, mode=prefs.mode||'trace', cur=0, tries=0, res=[], done=false, seal=null, fxTimer=0, compare=false, watchRaf=0;
+let idx=0, mode='trace', cur=0, tries=0, res=[], done=false, seal=null, fxTimer=0, compare=false, watchRaf=0;
 const MSG={trace:'Обводите подсвеченную черту от точки со стрелкой.',memory:'Пишите без образца. Ошибка покажет нужную черту.',
   free:'Свободное письмо без проверки. Потом откройте образец.',watch:'Коснитесь листа, чтобы повторить. Цвет черты — её часть.'};
 
@@ -627,7 +620,7 @@ function reset(){
 function select(i){
   idx=(i+DATA.length)%DATA.length; const d=DATA[idx];
   $('#kBig').textContent=d.k; $('#kRu').textContent=d.ru;
-  $('#kRd').innerHTML=`<b>${d.on}</b>${d.kun!=='—'?' · '+d.kun:''} · ${d.s.length} ${plural(d.s.length)}`;
+  $('#kRd').innerHTML=`<b>${d.on}</b>${d.kun!=='—'?' · '+d.kun:''}`;
   $('#count').textContent=`${pos%DATA.length+1} / ${DATA.length}`; $('#bPrev').disabled=pos===0;
   renderParts(); persist(); reset();
 }
@@ -638,7 +631,7 @@ function buildGrid(){
   const g=$('#grid20'); g.innerHTML='';
   DATA.forEach((d,i)=>{
     const b=document.createElement('button'); b.className='chip'; b.title=d.ru;
-    const r=store[d.k]||{}, best=r.memory||0, s=best>=90?'優':best>=75?'良':best>=60?'可':'';
+    const r=store[d.k]||{}, best=Math.max(r.trace||0,r.memory||0), s=best>=90?'優':best>=75?'良':best>=60?'可':'';
     b.innerHTML=`${d.k}<small>${d.ru}</small><span class="g ${s?'on':''}">${s}</span>`;
     b.setAttribute('aria-current',i===idx?'true':'false');
     b.onclick=()=>{ $('#ovList').hidden=true; select(i); }; g.appendChild(b);
