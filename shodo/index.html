@@ -449,8 +449,8 @@ function step(e){
   const dx=(p.x-L.x)/d, dy=(p.y-L.y)/d; live.dir={x:live.dir.x*.6+dx*.4,y:live.dir.y*.6+dy*.4};
   const dl=Math.hypot(live.dir.x,live.dir.y)||1, nx=-live.dir.y/dl, ny=live.dir.x/dl;
   // ink runs out with distance and pressure; speed dries the brush (kasure)
-  live.ink=Math.max(live.free?.08:.22, live.ink - d*.0028*(.6+pr)*(live.free?1.7:1));
-  const dry=clamp(live.v*1.1-.18,0,.8) + (1-live.ink)*.55;
+  live.ink=Math.max(live.free?.08:.22, live.ink - d*.0028*(.6+pr)*(live.free?3.2:1));
+  const dry=live.free ? clamp(live.v*1.4-.12,0,.85) + (1-live.ink)*.8 : clamp(live.v*1.1-.18,0,.8) + (1-live.ink)*.55;
   if (live.free){ live.dryS=(live.dryS??dry)*.88+dry*.12; }   // freestyle: dryness changes slowly, not per touch event
   const dryN=clamp(live.free?live.dryS:dry,0,1);
   const bw=live.r*2/NB*(live.free?2.15*(1-.62*dryN):2.15);   // dry hairs separate: white streaks (kasure)
@@ -460,7 +460,7 @@ function step(e){
     const pos={x:p.x+nx*b.o*live.r, y:p.y+ny*b.o*live.r};
     // freestyle: each hair runs dry in stretches (slow noise along the stroke) — long white streaks, ragged edges
     const wet = live.free ? .5+.3*Math.sin(live.dist*b.fq*.4+b.ph)+.14*Math.sin(live.dist*b.fq*1.1+b.ph*1.9)-b.thr*.35 : 1;
-    const th = dryN*(1.0+(Math.abs(b.o)>.6?.35:0));   // hysteresis: a hair stays dry (or wet) for a stretch, no flicker
+    const th = dryN*(Math.abs(b.o)>.6 ? 1.05 : Math.abs(b.o)>.25 ? .8 : .55);   // the core of the brush keeps ink longest   // hysteresis: a hair stays dry (or wet) for a stretch, no flicker
     if (live.free){ if (b.dry){ if (wet>th+.09 || dryN<.1) b.dry=false; } else if (dryN>.12 && wet<th-.04) b.dry=true; }
     const dryHair = live.free && b.dry;
     if (b.prev && !dryHair && (live.free || (1-dry) > b.thr*(dry>.15?1.35:.6))){
