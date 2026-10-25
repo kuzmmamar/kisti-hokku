@@ -506,14 +506,14 @@ sheet.addEventListener('pointercancel',endStroke);
 
 
 /* ---------- practice logic ---------- */
-let idx=0, mode='trace', cur=0, tries=0, res=[], done=false, seal=null, fxTimer=0, compare=false, watchRaf=0;
+let idx=0, mode=(prefs.mode==='free'?'free':'trace'), cur=0, tries=0, res=[], done=false, seal=null, fxTimer=0, compare=false, watchRaf=0;
 let freeImg=null;
 function showArt(){ const im=$('#artImg'), k=$('#artK'), c=DATA[idx].k;
   freeImg=new Image(); freeImg.onload=()=>{ if(mode==='free') drawBg(); }; freeImg.src='calli/'+c.codePointAt(0).toString(16).padStart(5,'0')+'.webp';
   im.hidden=false; k.hidden=true; im.alt=c;
   im.onerror=()=>{ im.hidden=true; k.hidden=false; };
   im.src='calli/'+c.codePointAt(0).toString(16).padStart(5,'0')+'.webp'; }
-function setMode(m){ mode=m; document.body.classList.toggle('free',m==='free'); document.querySelectorAll('#modeSw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m)); }
+function setMode(m){ mode=m; try{ prefs.mode=m; persist(); }catch(e){} document.body.classList.toggle('free',m==='free'); document.querySelectorAll('#modeSw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m)); }
 function switchMode(m){ if(m===mode) return; const open=document.body.classList.contains('focus'); setMode(m); reset(open); if(open){ if(m==='trace') exitFocus(9000); } else enterFocus(); }
 function startTracing(){ if(mode!=='trace'){ setMode('trace'); reset(); } if(done) reset(); hideFx(); enterFocus(); }
 function startFree(){ if(mode!=='free'){ setMode('free'); reset(); } hideFx(); enterFocus(); }
@@ -693,7 +693,7 @@ function select(i){
   $('#kBig').textContent=d.k; $('#kRu').textContent=d.ru;
   $('#kRd').innerHTML=`<b>${d.on}</b>${d.kun!=='—'?' · '+d.kun:''}`;
   $('#count').textContent=`${pos%DATA.length+1} / ${DATA.length}`; $('#bPrev').disabled=pos===0;
-  setMode('trace'); renderParts(); persist(); reset();
+  setMode(prefs.mode==='free'?'free':'trace'); renderParts(); persist(); reset();
 }
 function plural(n){ const a=n%10,b=n%100; return a===1&&b!==11?'черта':a>=2&&a<=4&&(b<10||b>=20)?'черты':'черт'; }
 function persist(){ store._p={size:prefs.size,sens:prefs.sens,mode}; prefs=store._p; delete store._d; delete store._pos; save(); }
@@ -731,6 +731,7 @@ $('#bPrev').onclick=prev;
 $('#bClose').onclick=()=>exitFocus(0);
 $('#bFree').onclick=startFree;
 document.querySelectorAll('#modeSw button').forEach(b=>b.onclick=()=>switchMode(b.dataset.m));
+const startMode=()=>mode==='free'?startFree():startTracing();
 $('#bAgain').onclick=()=>{ reset(true); if(mode==='trace') exitFocus(9000); };
 $('#bUndo2').onclick=()=>{ inkStrokes.pop(); replayInk(); };
 $('#bSeal').innerHTML=sealSvg();
@@ -748,7 +749,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySele
 
 document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===mode));
 document.querySelectorAll('.sizes button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.s===prefs.size));
-resize(); select(deck[pos]); setMode('trace');
+resize(); select(deck[pos]);
 </script>
 <script>
 if('serviceWorker' in navigator){addEventListener('load',()=>{
