@@ -77,7 +77,7 @@ body.focus .sheet{width:min(100cqw,100cqh);height:min(100cqh,calc(min(100cqw,100
 body.focus .close{display:block}
 .close.undo{right:calc(max(10px,env(safe-area-inset-right,0px)) + 50px);font-size:19px}
 body.focus .close.undo{display:none}
-body.focus.free .close.undo{display:block}
+body.focus.free .close.undo{display:none}
 body.focus.free #bClose{display:none}
 .sealBtn{display:none;position:absolute;top:max(8px,env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));z-index:2;width:46px;height:46px;min-height:0;padding:0;border:0;background:transparent;border-radius:3px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
 .sealBtn svg{display:block;width:100%;height:100%}
@@ -515,7 +515,7 @@ function switchMode(m){ if(m===mode) return; const open=document.body.classList.
 function startTracing(){ if(mode!=='trace'){ setMode('trace'); reset(); } if(done) reset(); hideFx(); enterFocus(); }
 function startFree(){ if(mode!=='free'){ setMode('free'); reset(); } hideFx(); enterFocus(); }
 const MSG={trace:'Коснитесь знака, чтобы писать кистью.',memory:'Пишите без образца. Ошибка покажет нужную черту.',
-  free:'Фристайл: пишите поверх образца как хотите, без проверки. ↶ убирает последнюю черту, печать 宇宙空 завершает работу.',watch:'Коснитесь листа, чтобы повторить. Цвет черты — её часть.'};
+  free:'Фристайл: пишите поверх образца как хотите, без проверки. Печать 宇宙空 завершает работу.',watch:'Коснитесь листа, чтобы повторить. Цвет черты — её часть.'};
 
 /* random order: a shuffled deck, reshuffled after all twenty */
 function newDeck(avoid){ const a=[...Array(DATA.length).keys()];
@@ -533,7 +533,7 @@ function setFocus(on, animate=true){
   if (document.body.classList.contains('focus')===on) return;
   const a=sheet.getBoundingClientRect();
   document.body.classList.toggle('focus',on);
-  if(!on && mode==='free' && inkStrokes.length){ sheet.classList.add('mine'); setFb(kuSeal?'Работа скреплена печатью 宇宙空. «Обвести» — по чертам, → — следующий знак.':'Ваш вариант поверх образца. «Обвести» — по чертам, → — следующий знак.','good'); }
+  if(!on && mode==='free' && (inkStrokes.length || kuSeal)){ sheet.classList.add('mine'); setFb(kuSeal?'Работа скреплена печатью 宇宙空. «Обвести» — по чертам, → — следующий знак.':'Ваш вариант поверх образца. «Обвести» — по чертам, → — следующий знак.','good'); }
   resize();
   const b=sheet.getBoundingClientRect();
   if (!animate || reduceMotion || !b.width || !sheet.animate) return;
