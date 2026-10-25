@@ -66,7 +66,14 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 body.focus .top,body.focus .modes,body.focus .parts,body.focus .fb,body.focus .bar{opacity:0;pointer-events:none}
 .stage{position:relative}
 body.focus .stage{position:fixed;inset:0;z-index:15;background:var(--bg);box-sizing:border-box;
-  padding:max(56px,calc(env(safe-area-inset-top,0px) + 50px)) env(safe-area-inset-right,0px) calc(max(8px,env(safe-area-inset-bottom,0px)) + 58px) env(safe-area-inset-left,0px)}
+  padding:max(56px,calc(env(safe-area-inset-top,0px) + 50px)) env(safe-area-inset-right,0px) calc(max(8px,env(safe-area-inset-bottom,0px)) + 104px) env(safe-area-inset-left,0px)}
+.hintParts{display:none;position:absolute;left:8px;right:8px;bottom:calc(max(10px,env(safe-area-inset-bottom,0px)) + 58px);z-index:2;flex-wrap:nowrap;justify-content:safe center;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none}
+.hintParts::-webkit-scrollbar{display:none}
+.hintParts .pt{flex:none;min-height:30px;padding:2px 7px 2px 3px;font-size:12px;gap:4px}
+.hintParts .pt b{width:21px;height:21px;font-size:15px}
+body.focus .hintParts{display:flex}
+.hintParts .op{color:var(--muted)}
+.hintParts .res{font-family:var(--display);font-size:18px;font-weight:700}
 .modeSw{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:2;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--surface);width:min(340px,calc(100% - 24px));box-sizing:border-box}
 .modeSw button{border:0;background:transparent;min-height:40px;font-size:14.5px}
 .modeSw button[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
@@ -220,6 +227,7 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
     <button class="close undo" id="bUndo2" aria-label="Убрать последнюю черту">↶</button>
     <div class="seals" id="seals" role="group" aria-label="Печати"></div>
     <button class="again" id="bAgain">Заново</button>
+    <div class="hintParts" id="hintParts" aria-label="Из чего состоит знак"></div>
     <div class="modeSw" id="modeSw" role="group" aria-label="Режим письма"><button data-m="trace">Каллиграфия</button><button data-m="free">Фристайл</button></div>
     <div class="stampHint" id="stampHint" hidden>Коснитесь листа там, где поставить печать</div>
   </div>
@@ -657,6 +665,7 @@ function drawSeal(ch){
 const PART_COLORS=['#2C4A6F','#B0761A','#2F6B4A','#7A3B69'];
 let partOn=-1;
 function partOf(i){ const ps=DATA[idx].parts; for(let j=0;j<ps.length;j++) if(i+1>=ps[j][2]&&i+1<=ps[j][3]) return j; return 0; }
+let hintT=0;
 function renderParts(){
   const d=DATA[idx], f=$('#formula'); f.innerHTML=''; partOn=-1;
   d.parts.forEach((p,j)=>{
@@ -669,6 +678,10 @@ function renderParts(){
     const eq=document.createElement('span'); eq.className='op'; eq.textContent='='; f.appendChild(eq);
     const r=document.createElement('span'); r.className='res'; r.textContent=d.k; f.appendChild(r);
   }
+  // the same hint on the writing screen; a tap shows that part on the sheet for a moment
+  const h=$('#hintParts'); h.innerHTML='';
+  [...f.children].filter(el=>el.classList.contains('pt')).forEach(el=>{ const c=el.cloneNode(true); if(el.classList.contains('pt')){ const j=[...f.querySelectorAll('.pt')].indexOf(el);
+    c.onclick=()=>{ if(stampMode) return; showPart(j); clearTimeout(hintT); hintT=setTimeout(()=>{ if(partOn===j) hideFx(); },1600); }; } h.appendChild(c); });
   showWhy();
 }
 const LAYER={oracle:'кости',bronze:'бронза',seal:'печать'}, LAYER_FULL={oracle:'надпись на гадательной кости',bronze:'надпись на бронзе',seal:'печатный стиль'};
