@@ -71,6 +71,8 @@ body.focus .stage{position:fixed;inset:0;z-index:15;background:var(--bg);box-siz
 .modeSw button{border:0;background:transparent;min-height:40px;font-size:14.5px}
 .modeSw button[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
 body.focus .modeSw{display:grid}
+.again{display:none;position:absolute;top:max(10px,env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));z-index:2;min-height:40px;padding:0 16px;border-radius:20px;font-size:14.5px}
+body.focus .again{display:block}
 body.focus .sheet{width:min(100cqw,100cqh);height:min(100cqh,calc(min(100cqw,100cqh)*1.348));aspect-ratio:auto;border-radius:0;box-shadow:none}
 .close{display:none;position:absolute;top:max(10px,env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));z-index:2;
   width:40px;height:40px;padding:0;border-radius:20px;font-size:16px;line-height:1}
@@ -213,6 +215,7 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
     <button class="close" id="bClose" aria-label="Свернуть лист">✕</button>
     <button class="close undo" id="bUndo2" aria-label="Убрать последнюю черту">↶</button>
     <button class="sealBtn" id="bSeal" aria-label="Поставить печать 宇宙空 и завершить"></button>
+    <button class="again" id="bAgain">Заново</button>
     <div class="modeSw" id="modeSw" role="group" aria-label="Режим письма"><button data-m="trace">Каллиграфия</button><button data-m="free">Фристайл</button></div>
     <div class="stampHint" id="stampHint" hidden>Коснитесь листа там, где поставить печать</div>
   </div>
@@ -728,6 +731,7 @@ $('#bPrev').onclick=prev;
 $('#bClose').onclick=()=>exitFocus(0);
 $('#bFree').onclick=startFree;
 document.querySelectorAll('#modeSw button').forEach(b=>b.onclick=()=>switchMode(b.dataset.m));
+$('#bAgain').onclick=()=>{ reset(true); if(mode==='trace') exitFocus(9000); };
 $('#bUndo2').onclick=()=>{ inkStrokes.pop(); replayInk(); };
 $('#bSeal').innerHTML=sealSvg();
 let stampMode=false;
