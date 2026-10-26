@@ -180,6 +180,7 @@ body.focus .art,.sheet.peek .art,.sheet.mine .art{opacity:0;pointer-events:none}
 .sizes button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
 .src{font-size:13px;color:var(--muted)}
+.drySc{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:-8px;padding-left:min(46%,190px)}
 .tips{display:flex;flex-direction:column;gap:8px}
 .tips p{margin:0;font-size:13px;color:var(--muted)}
 .tips b{color:var(--fg);font-weight:600}
@@ -250,6 +251,8 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
     <div class="row"><div class="sizes" role="group" aria-label="Толщина">
       <button data-s="4.2">Тонкая</button><button data-s="6">Средняя</button><button data-s="8.2">Толстая</button></div></div>
     <div class="row"><label for="sens" class="src">Чувствительность к нажиму</label><input type="range" id="sens" min="0.4" max="1.8" step="0.05" value="1"></div>
+    <div class="row"><label for="dryRate" class="src">Как быстро пересыхает кисть</label><input type="range" id="dryRate" min="0" max="2" step="0.1" value="1"></div>
+    <div class="drySc"><span>не сохнет</span><span>как обычно</span><span>быстро</span></div>
     <div class="src" id="src">Коснитесь листа: определю, чем вы пишете.</div>
     <div class="tips">
       <div class="lab">Окончания черт</div>
@@ -282,7 +285,7 @@ const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 let store = {};
 try { store = JSON.parse(localStorage.getItem('shodo20') || '{}') || {}; } catch(e) { store = {}; }
 const save = () => { try { localStorage.setItem('shodo20', JSON.stringify(store)); } catch(e) {} };
-let prefs = Object.assign({size:6, sens:1, mode:'trace'}, store._p||{});
+let prefs = Object.assign({size:6, sens:1, dry:1, mode:'trace'}, store._p||{});
 
 const probe = document.getElementById('probe');
 const cache = {};
@@ -457,8 +460,9 @@ function step(e){
   const dx=(p.x-L.x)/d, dy=(p.y-L.y)/d; live.dir={x:live.dir.x*.6+dx*.4,y:live.dir.y*.6+dy*.4};
   const dl=Math.hypot(live.dir.x,live.dir.y)||1, nx=-live.dir.y/dl, ny=live.dir.x/dl;
   // ink runs out with distance and pressure; speed dries the brush (kasure)
-  live.ink=Math.max(live.free?.08:.22, live.ink - d*.0028*(.6+pr)*(live.free?3.2:1));
-  const dry=live.free ? clamp(live.v*1.4-.12,0,.85) + (1-live.ink)*.8 : clamp(live.v*1.1-.18,0,.8) + (1-live.ink)*.55;
+  const dk=clamp(prefs.dry??1,0,2);   // «как быстро пересыхает кисть»: 0 — не сохнет, 1 — как обычно, 2 — вдвое быстрее
+  live.ink=Math.max(live.free?.08:.22, live.ink - d*.0028*(.6+pr)*(live.free?3.2:1)*dk);
+  const dry=(live.free ? clamp(live.v*1.4-.12,0,.85) + (1-live.ink)*.8 : clamp(live.v*1.1-.18,0,.8) + (1-live.ink)*.55)*Math.min(1.3,dk);
   if (live.free){ live.dryS=(live.dryS??dry)*.88+dry*.12; }   // freestyle: dryness changes slowly, not per touch event
   const dryN=clamp(live.free?live.dryS:dry,0,1);
   const bw=live.r*2/NB*(live.free?2.15*(1-.62*dryN):2.15);   // dry hairs separate: white streaks (kasure)
@@ -755,7 +759,7 @@ function select(i){
   setMode(prefs.mode==='free'?'free':'trace'); renderParts(); persist(); reset();
 }
 function plural(n){ const a=n%10,b=n%100; return a===1&&b!==11?'черта':a>=2&&a<=4&&(b<10||b>=20)?'черты':'черт'; }
-function persist(){ store._p={size:prefs.size,sens:prefs.sens,mode,seal:prefs.seal}; prefs=store._p; delete store._d; delete store._pos; save(); }
+function persist(){ store._p={size:prefs.size,sens:prefs.sens,dry:prefs.dry,mode,seal:prefs.seal}; prefs=store._p; delete store._d; delete store._pos; save(); }
 
 function buildGrid(){
   const g=$('#grid20'); g.innerHTML='';
@@ -775,6 +779,7 @@ document.querySelectorAll('.sizes button').forEach(b=>{
   b.onclick=()=>{ prefs.size=+b.dataset.s; document.querySelectorAll('.sizes button').forEach(x=>x.setAttribute('aria-pressed',x===b)); persist(); drawBg(); };
 });
 $('#sens').value=prefs.sens; $('#sens').oninput=e=>{ prefs.sens=+e.target.value; persist(); };
+$('#dryRate').value=prefs.dry??1; $('#dryRate').oninput=e=>{ prefs.dry=+e.target.value; persist(); };
 $('#bClear').onclick=reset;
 $('#bHint').onclick=()=>{
   if (mode==='free'){ inkStrokes.pop(); replayInk(); return; }
