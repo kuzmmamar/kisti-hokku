@@ -651,7 +651,6 @@ function finish(){
   scoreText=`${score} из 100 · ${first} из ${n} с первой попытки · ${label}.`;
   setFb(scoreText+' Поставьте печать, чтобы закрепить работу.', g?'good':'bad');
   $('#bNext').classList.add('pulse');
-  if (g){ seal=g; drawSeal(g); const as=$('#artSeal'); as.textContent=g; as.hidden=false; }
   sheet.classList.add('mine'); drawBg();
 }
 function drawSeal(ch){
