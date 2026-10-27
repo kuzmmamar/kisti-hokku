@@ -80,6 +80,7 @@ body.focus .hintParts{display:flex}
 body.focus .modeSw{display:grid}
 .again{display:none;position:absolute;top:max(10px,env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));z-index:2;min-height:40px;padding:0 16px;border-radius:20px;font-size:14.5px}
 body.focus .again{display:block}
+.again.brushTop{left:calc(max(10px,env(safe-area-inset-left,0px)) + 96px);padding:0 14px}
 body.sealed #bAgain,body.sealed #bClear,body.sealed .seals,body.sealed .stampHint{display:none!important}
 body.sealed .bar{grid-template-columns:1fr}
 body.sealed .sheet{cursor:default}
@@ -228,6 +229,7 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
     <button class="close undo" id="bUndo2" aria-label="Убрать последнюю черту">↶</button>
     <div class="seals" id="seals" role="group" aria-label="Печати"></div>
     <button class="again" id="bAgain">Заново</button>
+    <button class="again brushTop" id="bBrush2" aria-label="Настройки кисти">Кисть</button>
     <div class="hintParts" id="hintParts" aria-label="Из чего состоит знак"></div>
     <div class="modeSw" id="modeSw" role="group" aria-label="Режим письма"><button data-m="trace">Каллиграфия</button><button data-m="free">Фристайл</button></div>
     <div class="stampHint" id="stampHint" hidden>Коснитесь листа там, где поставить печать</div>
@@ -386,9 +388,40 @@ function sealSvg(key=sealKey()){
 
 /* ---------- brush engine ---------- */
 /* ops: [0,x0,y0,x1,y1,w] bristle line · [1,x,y,r] solid dab · [2,x,y,r,a] ink bleed */
+// Paper grain for dry ink: one tileable "washi" relief (noise + fibres). A drying hair leaves ink
+// only on the high points of the paper; the less ink, the fewer points. Same paper everywhere,
+// so overlapping hairs share the grain, as on real paper.
+const GL=8, GS=.1;
+const GRAIN=(()=>{ const N=384; let s=7; const rnd=()=>(s=(s*1664525+1013904223)>>>0)/4294967296;
+  const v=new Float32Array(N*N);
+  const oct=(cell,amp)=>{ const g=N/cell, G=Array.from({length:g*g},rnd);
+    for(let y=0;y<N;y++){ const fy=y/cell, y0=Math.floor(fy), ty=fy-y0, sy=ty*ty*(3-2*ty), r0=(y0%g)*g, r1=((y0+1)%g)*g;
+      for(let x=0;x<N;x++){ const fx=x/cell, x0=Math.floor(fx), tx=fx-x0, sx=tx*tx*(3-2*tx), c0=x0%g, c1=(x0+1)%g;
+        v[y*N+x]+=amp*((G[r0+c0]*(1-sx)+G[r0+c1]*sx)*(1-sy)+(G[r1+c0]*(1-sx)+G[r1+c1]*sx)*sy); } } };
+  oct(48,.3); oct(12,.3); oct(4,.3); oct(2,.25); oct(1,.22);
+  const fc=document.createElement('canvas'); fc.width=fc.height=N; const f=fc.getContext('2d');
+  f.strokeStyle='rgba(255,255,255,.22)'; f.lineCap='round';
+  for(let i=0;i<650;i++){ const x=rnd()*N, y=rnd()*N, a=rnd()*6.283, L=6+rnd()*34, bend=(rnd()-.5)*L*.5; f.lineWidth=.6+rnd()*1.1;
+    for(const dx of [-N,0,N]) for(const dy of [-N,0,N]){ f.beginPath(); f.moveTo(x+dx,y+dy);
+      f.quadraticCurveTo(x+dx+Math.cos(a)*L/2-Math.sin(a)*bend, y+dy+Math.sin(a)*L/2+Math.cos(a)*bend, x+dx+Math.cos(a)*L, y+dy+Math.sin(a)*L); f.stroke(); } }
+  const fd=f.getImageData(0,0,N,N).data; for(let i=0;i<N*N;i++) v[i]+=fd[i*4+3]/255*.55;
+  let lo=1e9, hi=-1e9; for(const q of v){ if(q<lo) lo=q; if(q>hi) hi=q; }
+  const H=new Float32Array(1025); for(const q of v) H[1+Math.floor((q-lo)/(hi-lo)*1023.999)]++;
+  for(let i=1;i<1025;i++) H[i]+=H[i-1];
+  const rank=new Float32Array(N*N); for(let i=0;i<N*N;i++){ const b=Math.floor((v[i]-lo)/(hi-lo)*1023.999); rank[i]=(H[b]+H[b+1])/2/(N*N); }
+  return Array.from({length:GL},(_,k)=>{ const cov=(k+1)/(GL+1), c=document.createElement('canvas'); c.width=c.height=N;
+    const x=c.getContext('2d'), im=x.createImageData(N,N), D=im.data;
+    for(let i=0;i<N*N;i++){ D[i*4]=D[i*4+1]=D[i*4+2]=18; D[i*4+3]=255*clamp((rank[i]-(1-cov))/.035+.5,0,1); }
+    x.putImageData(im,0,0); return c; });
+})();
+const PATS=new WeakMap();
+function grain(c,k){ let a=PATS.get(c);
+  if(!a){ a=GRAIN.map(g=>{ const p=c.createPattern(g,'repeat'); p.setTransform(new DOMMatrix([GS,0,0,GS,0,0])); return p; }); PATS.set(c,a); }
+  return a[k]; }
 function drawOp(c, o){
   if (o[0]===0){ c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); }
   else if (o[0]===1){ c.beginPath(); c.arc(o[1],o[2],o[3],0,7); c.fill(); }
+  else if (o[0]===5){ c.strokeStyle=grain(c,o[6]); c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); c.strokeStyle=INK; }
   else if (o[0]===3){ c.globalAlpha=o[6]; c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); c.globalAlpha=1; }
   else { const g=c.createRadialGradient(o[1],o[2],0,o[1],o[2],o[3]);
     g.addColorStop(0,`rgba(18,18,18,${o[4]})`); g.addColorStop(.55,`rgba(18,18,18,${o[4]*.75})`); g.addColorStop(1,'rgba(18,18,18,0)');
@@ -402,7 +435,11 @@ function replayInk(){
   if (live) for(const o of live.ops) drawOp(xInk,o);
 }
 
-const NB=16;
+const NB=16, NBF=40;
+// how much ink one freestyle hair still carries here: 0 — dry, 1 — full. Edges give out first.
+function hairInk(b,dist,dryN){ const ae=Math.abs(b.o);
+  const load=b.base*(.5+.3*Math.sin(dist*b.fq+b.ph)+.2*Math.sin(dist*b.fq*2.9+b.ph*1.7));
+  const x=clamp((load-dryN*(ae>.75?1.2:ae>.4?.95:.72)+.2)/.4,0,1); return x*x*(3-2*x); }
 let live=null; // stroke in progress
 let pSrc='—', touchForce=0, touchRad=0;
 sheet.addEventListener('touchstart',e=>{const t=e.touches[0]; if(t){touchForce=t.force||0; touchRad=t.radiusX||0;}},{passive:true});
@@ -427,7 +464,9 @@ function toV(e){ const r=sheet.getBoundingClientRect(); return {x:VX0+(e.clientX
 function beginStroke(e){
   const p=toV(e), now=performance.now();
   live={ops:[],pts:[p],src:null,base:0,t0:now,last:{x:p.x,y:p.y,t:now},still:now,ink:1,r:0,p:.5,
-    br:Array.from({length:NB},(_,k)=>({o:(k/(NB-1))*2-1+(Math.random()-.5)*.08, thr:Math.random()*.55, prev:null, ph:Math.random()*6.283, fq:.35+Math.random()*.5})),
+    br:(mode==='free'
+      ? Array.from({length:NBF},(_,k)=>({o:clamp((k/(NBF-1))*2-1+(Math.random()-.5)*.05,-1,1), thr:Math.random()*.55, prev:null, ph:Math.random()*6.283, fq:.06+Math.random()*.16, base:.75+Math.random()*.5}))
+      : Array.from({length:NB},(_,k)=>({o:(k/(NB-1))*2-1+(Math.random()-.5)*.08, thr:Math.random()*.55, prev:null, ph:Math.random()*6.283, fq:.35+Math.random()*.5}))),
     dir:{x:0,y:1}, v:0, bleedR:0, dist:0, free:mode==='free'};
   const raw=readPressure(e,live); live.p=raw;
   const w=brushW(), r=w/2*(.4+.75*shape(raw));
@@ -465,27 +504,31 @@ function step(e){
   const dry=(live.free ? clamp(live.v*1.4-.12,0,.85) + (1-live.ink)*.8 : clamp(live.v*1.1-.18,0,.8) + (1-live.ink)*.55)*Math.min(1.3,dk);
   if (live.free){ live.dryS=(live.dryS??dry)*.88+dry*.12; }   // freestyle: dryness changes slowly, not per touch event
   const dryN=clamp(live.free?live.dryS:dry,0,1);
-  const bw=live.r*2/NB*(live.free?2.15*(1-.62*dryN):2.15);   // dry hairs separate: white streaks (kasure)
+  const bw=live.r*2/NB*2.15;
   prepInk(xInk);
   live.dist+=d;
-  for (const b of live.br){
+  if (live.free){
+    // dry brush (kasure): every hair carries its own, slowly changing amount of ink.
+    // Edges give out first; a drying hair thins gradually and breaks into grain instead of switching off.
+    const sp=live.r*2/(NBF-1);
+    for (const b of live.br){
+      const pos={x:p.x+nx*b.o*live.r, y:p.y+ny*b.o*live.r}, h=hairInk(b,live.dist,dryN);
+      if (b.prev && h>.03){
+        const wHair=sp*2.4*(.35+.65*h);
+        // a full hair paints solid; a drying one only touches the high points of the paper
+        const op=h>.93?[0,b.prev.x,b.prev.y,pos.x,pos.y,wHair]:[5,b.prev.x,b.prev.y,pos.x,pos.y,wHair,clamp(Math.round(h*GL-.5),0,GL-1)];
+        live.ops.push(op); drawOp(xInk,op);
+      }
+      b.prev=pos;
+    }
+  } else for (const b of live.br){
     const pos={x:p.x+nx*b.o*live.r, y:p.y+ny*b.o*live.r};
-    // freestyle: each hair runs dry in stretches (slow noise along the stroke) — long white streaks, ragged edges
-    const wet = live.free ? .5+.3*Math.sin(live.dist*b.fq*.4+b.ph)+.14*Math.sin(live.dist*b.fq*1.1+b.ph*1.9)-b.thr*.35 : 1;
-    const th = dryN*(Math.abs(b.o)>.6 ? 1.05 : Math.abs(b.o)>.25 ? .8 : .55);   // the core of the brush keeps ink longest   // hysteresis: a hair stays dry (or wet) for a stretch, no flicker
-    if (live.free){ if (b.dry){ if (wet>th+.09 || dryN<.1) b.dry=false; } else if (dryN>.12 && wet<th-.04) b.dry=true; }
-    const dryHair = live.free && b.dry;
-    if (b.prev && !dryHair && (live.free || (1-dry) > b.thr*(dry>.15?1.35:.6))){
+    if (b.prev && (1-dry) > b.thr*(dry>.15?1.35:.6)){
       const op=[0,b.prev.x,b.prev.y,pos.x,pos.y,bw]; live.ops.push(op); drawOp(xInk,op);
     }
     b.prev=pos;
   }
   if (live.free){
-    // stray hairs along the edges: short, thin, leaning back along the stroke
-    for (const side of [-1,1]) if (dryN>.2 && Math.random()<.22*dryN*Math.min(1,d/.8)){
-      const ex=p.x+nx*side*live.r*(.88+Math.random()*.14), ey=p.y+ny*side*live.r*(.88+Math.random()*.14), len=live.r*(.2+Math.random()*.55);
-      const bx=-live.dir.x/dl, by=-live.dir.y/dl;
-      const o=[3,ex,ey,ex+nx*side*len*.6+bx*len,ey+ny*side*len*.5+by*len,.08+Math.random()*.2,.75+Math.random()*.25]; live.ops.push(o); drawOp(xInk,o); }
     // slow, wet brush: ink creeps into the paper at the edges
     if (live.v<.035 && dryN<.2 && Math.random()<.5){ const side=Math.random()<.5?-1:1;
       const o=[2,p.x+nx*side*live.r*.95,p.y+ny*side*live.r*.95,live.r*(.3+Math.random()*.25),.18]; live.ops.push(o); drawOp(xInk,o); }
@@ -532,7 +575,8 @@ function endStroke(){
       for (const b of live.br){
         const pos={x:x+nx*b.o*rr, y:y+ny*b.o*rr};
         const keep = live.free ? (t<.4 || Math.abs(b.o)<.2 || b.thr < 1.25*(1-t)+.06) : (t<.78 || Math.abs(b.o)<.4 || b.thr < 1.8*(1-t)+.25);   // a few outer hairs give out near the tip
-        if (b.prev && keep){ const op=[0,b.prev.x,b.prev.y,pos.x,pos.y,bw]; live.ops.push(op); drawOp(xInk,op); }
+        if (b.prev && keep){ const h=live.free?hairInk(b,live.dist+t*L,clamp(live.dryS??0,0,1)):1;   // the tail keeps the hair's dryness
+          if (h>.03){ const op=h>.93?[0,b.prev.x,b.prev.y,pos.x,pos.y,bw]:[5,b.prev.x,b.prev.y,pos.x,pos.y,bw*(.5+.5*h),clamp(Math.round(h*GL-.5),0,GL-1)]; live.ops.push(op); drawOp(xInk,op); } }
         b.prev=pos;
       }
     }
@@ -808,11 +852,13 @@ let stampMode=false;
 let stampKey='ichigo';
 function armStamp(on,key){ stampMode=on; if(key) stampKey=key; if(on) clearTimeout(focusT); document.querySelectorAll('#seals .sealBtn').forEach(b=>b.classList.toggle('armed',on&&b.dataset.seal===stampKey)); $('#stampHint').hidden=!on; }
 function placeSeal(e){ const p=toV(e); kuSeal={x:p.x,y:p.y,set:stampKey}; armStamp(false); document.body.classList.add('sealed'); clearFx(); setTimeout(()=>exitFocus(0),650); }
-$('#bBrush').onclick=()=>{ $('#ovBrush').hidden=false; };
-$('#cBrush').onclick=()=>{ $('#ovBrush').hidden=true; };
+function openBrush(){ clearTimeout(focusT); $('#ovBrush').hidden=false; }
+function closeBrush(){ $('#ovBrush').hidden=true; if(document.body.classList.contains('focus')){ drawBg(); if(mode==='trace'&&!done&&!stampMode) exitFocus(9000); } }
+$('#bBrush').onclick=openBrush; $('#bBrush2').onclick=openBrush;
+$('#cBrush').onclick=closeBrush;
 $('#bList').onclick=()=>{ buildGrid(); $('#ovList').hidden=false; };
 $('#cList').onclick=()=>{ $('#ovList').hidden=true; };
-document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.hidden=true; }));
+document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o){ if(o.id==='ovBrush') closeBrush(); else o.hidden=true; } }));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.ov').forEach(o=>o.hidden=true);
   if(e.target.tagName==='INPUT')return; if(e.key==='ArrowRight') next(); if(e.key==='ArrowLeft') prev(); });
 
