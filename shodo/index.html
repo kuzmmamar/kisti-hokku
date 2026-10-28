@@ -605,7 +605,7 @@ function showMeter(v,dwell){ const m=$('#meter'); m.querySelector('span').style.
 
 sheet.addEventListener('pointerdown',e=>{
   if (stampMode && document.body.classList.contains('focus')){ e.preventDefault(); placeSeal(e); return; }
-  if (!document.body.classList.contains('focus')){ e.preventDefault(); if(document.body.classList.contains('sealed')){ setFb('Работа скреплена печатью '+SEALS[kuSeal.set||sealKey()].name+'. → — следующий знак.','good'); return; } mode==='free'?startFree():startTracing(); return; }
+  if (!document.body.classList.contains('focus')){ e.preventDefault(); if(document.body.classList.contains('sealed')) reset(true); /* a sealed work: touching it starts the character again from scratch */ mode==='free'?startFree():startTracing(); return; }
   if (done){ e.preventDefault(); return; }
   e.preventDefault(); sheet.setPointerCapture(e.pointerId); hideFx(); clearTimeout(focusT); beginStroke(e);
 });
@@ -646,7 +646,7 @@ function setFocus(on, animate=true){
   if (document.body.classList.contains('focus')===on) return;
   const a=sheet.getBoundingClientRect();
   document.body.classList.toggle('focus',on);
-  if(!on && kuSeal){ sheet.classList.add('mine'); drawBg(); setFb((scoreText&&done?scoreText+' ':'')+'Работа скреплена печатью '+SEALS[kuSeal.set].name+'. → — следующий знак.','good'); }
+  if(!on && kuSeal){ sheet.classList.add('mine'); drawBg(); setFb((scoreText&&done?scoreText+' ':'')+'Работа скреплена печатью '+SEALS[kuSeal.set].name+'. Коснитесь знака, чтобы написать заново, → — следующий знак.','good'); }
   else if(!on && mode==='free' && inkStrokes.length){ sheet.classList.add('mine'); setFb(kuSeal?'Работа скреплена печатью '+SEALS[kuSeal.set].name+'. → — следующий знак.':'Ваш вариант поверх образца. «Обвести» — по чертам, → — следующий знак.','good'); }
   resize();
   const b=sheet.getBoundingClientRect();
