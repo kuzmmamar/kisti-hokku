@@ -282,7 +282,7 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
   <div class="panel" role="dialog" aria-label="Все знаки">
     <div class="ph"><h2>Все знаки</h2><button id="cList">Закрыть</button></div>
     <div class="gridScroll"><div class="grid20" id="grid20"></div></div>
-    <div class="src">Выберите знак — сразу откроется лист для письма.</div>
+    <div class="src">Выберите знак — откроется его страница.</div>
   </div>
 </div>
 
@@ -864,7 +864,7 @@ function buildGrid(){
     const r=store[d.k]||{}, best=Math.max(r.trace||0,r.memory||0), s=best>=90?'優':best>=75?'良':best>=60?'可':'';
     b.innerHTML=`${d.k}<small>${d.ru}</small><span class="g ${s?'on':''}">${s}</span>`;
     b.setAttribute('aria-current',i===idx?'true':'false');
-    b.onclick=()=>{ $('#ovList').hidden=true; select(i); mode==='free'?startFree():startTracing(); }; g.appendChild(b);   // straight to the writing sheet
+    b.onclick=()=>{ $('#ovList').hidden=true; select(i); }; g.appendChild(b);   // to the character's page
   });
 }
 
