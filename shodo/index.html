@@ -815,9 +815,14 @@ function select(i){
 function plural(n){ const a=n%10,b=n%100; return a===1&&b!==11?'черта':a>=2&&a<=4&&(b<10||b>=20)?'черты':'черт'; }
 function persist(){ store._p={size:prefs.size,sens:prefs.sens,dry:prefs.dry,mode,seal:prefs.seal}; prefs=store._p; delete store._d; delete store._pos; save(); }
 
+// the list screen goes by meaning: sky and light, weather, water, earth and plants, seasons,
+// the heart, quiet, time and the way, and 無為 at the end
+const LIST_ORDER='日月星光影空風雨雷霧雪水氷浮舟魚山石松竹花葉巣春夏秋冬寒熱心感愛夢憶涙美静音寂侘孤期会縁間永道跡無為';
 function buildGrid(){
   const g=$('#grid20'); g.innerHTML='';
-  DATA.forEach((d,i)=>{
+  const order=[...LIST_ORDER].map(k=>DATA.findIndex(d=>d.k===k)).filter(i=>i>=0);
+  DATA.forEach((d,i)=>{ if(!order.includes(i)) order.push(i); });
+  order.forEach(i=>{ const d=DATA[i];
     const b=document.createElement('button'); b.className='chip'; b.title=d.ru;
     const r=store[d.k]||{}, best=Math.max(r.trace||0,r.memory||0), s=best>=90?'優':best>=75?'良':best>=60?'可':'';
     b.innerHTML=`${d.k}<small>${d.ru}</small><span class="g ${s?'on':''}">${s}</span>`;
