@@ -627,8 +627,9 @@ function showMeter(v,dwell){ const m=$('#meter'); m.querySelector('span').style.
 
 sheet.addEventListener('pointerdown',e=>{
   if (stampMode && document.body.classList.contains('focus')){ e.preventDefault(); placeSeal(e); return; }
-  if (!document.body.classList.contains('focus')){ e.preventDefault(); if(document.body.classList.contains('sealed')) reset(true); /* a sealed work: touching it starts the character again from scratch */ mode==='free'?startFree():startTracing(); return; }
-  if (done){ e.preventDefault(); return; }
+  /* from the main screen a finished work (sealed, or a freestyle sheet) starts again from scratch */
+  if (!document.body.classList.contains('focus')){ e.preventDefault(); if(document.body.classList.contains('sealed') || (mode==='free' && inkStrokes.length)) reset(true); mode==='free'?startFree():startTracing(); return; }
+  if (done || document.body.classList.contains('sealed')){ e.preventDefault(); return; }
   e.preventDefault(); sheet.setPointerCapture(e.pointerId); hideFx(); clearTimeout(focusT); beginStroke(e);
 });
 sheet.addEventListener('pointermove',e=>{ if(live){ e.preventDefault(); moveStroke(e);} });
