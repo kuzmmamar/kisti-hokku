@@ -431,6 +431,7 @@ function grain(c,k){ let a=PATS.get(c);
 function drawOp(c, o){
   if (o[0]===0){ c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); }
   else if (o[0]===1){ c.beginPath(); c.arc(o[1],o[2],o[3],0,7); c.fill(); }
+  else if (o[0]===6){ c.beginPath(); c.ellipse(o[1],o[2],o[3],o[4],o[5],0,6.2832); c.fill(); }
   else if (o[0]===5){ c.strokeStyle=grain(c,o[6]); c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); c.strokeStyle=INK; }
   else if (o[0]===3){ c.globalAlpha=o[6]; c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); c.globalAlpha=1; }
   else { const g=c.createRadialGradient(o[1],o[2],0,o[1],o[2],o[3]);
@@ -506,7 +507,8 @@ function step(e){
   const speedF=clamp(1.18-live.v*1.25,.38,1.18);
   const target=w/2*(.3+1.05*pr)*speedF;
   live.r=live.r*.72+target*.28*(live.free?1+.07*Math.sin((live.dist||0)*.45+live.br[0].ph)+.04*Math.sin((live.dist||0)*1.3):1);
-  const dx=(p.x-L.x)/d, dy=(p.y-L.y)/d; live.dir={x:live.dir.x*.6+dx*.4,y:live.dir.y*.6+dy*.4};
+  const dx=(p.x-L.x)/d, dy=(p.y-L.y)/d, odl=Math.hypot(live.dir.x,live.dir.y)||1, turn=Math.abs((live.dir.x*dy-live.dir.y*dx)/odl);
+  live.dir={x:live.dir.x*.6+dx*.4,y:live.dir.y*.6+dy*.4};
   const dl=Math.hypot(live.dir.x,live.dir.y)||1, nx=-live.dir.y/dl, ny=live.dir.x/dl;
   // ink runs out with distance and pressure; speed dries the brush (kasure)
   const dk=clamp(prefs.dry??1,0,2);   // «как быстро пересыхает кисть»: 0 — не сохнет, 1 — как обычно, 2 — вдвое быстрее
@@ -539,6 +541,10 @@ function step(e){
     b.prev=pos;
   }
   if (live.free){
+    // splashes: a brush still holding ink throws drops off its hairs, more when fast or turning
+    const wet=clamp(live.ink*1.15-dryN*.45,0,1), fast=clamp((live.v-.05)/.35,0,1);
+    live.spl=(live.spl||0)+d*wet*(.04+fast*.4+Math.min(1,turn*2.5)*.35)*(.6+Math.random()*.8);
+    while (live.spl>1){ live.spl-=1+Math.random()*.6; splash(p,dx,dy,nx,ny,wet,fast); }
     // slow, wet brush: ink creeps into the paper at the edges
     if (live.v<.035 && dryN<.2 && Math.random()<.5){ const side=Math.random()<.5?-1:1;
       const o=[2,p.x+nx*side*live.r*.95,p.y+ny*side*live.r*.95,live.r*(.3+Math.random()*.25),.18]; live.ops.push(o); drawOp(xInk,o); }
@@ -546,6 +552,22 @@ function step(e){
   live.pts.push(p); live.last={x:p.x,y:p.y,t:now};
   if (d>.6){ live.still=now; live.bleedR=0; }
   showMeter(pr,false);
+}
+// one flung drop: lands beside the stroke, a little ahead; an uneven blot, stretched along its flight, sometimes with specks
+function splash(p,dx,dy,nx,ny,wet,fast){
+  const side=Math.random()<.5?-1:1, out=live.r*(1.05+Math.random()*1.4+fast*1.8)+Math.random()*1.2, ahead=(Math.random()*.8-.15)*(1.5+fast*6);
+  const x=p.x+nx*side*out+dx*ahead, y=p.y+ny*side*out+dy*ahead;
+  let fx=dx*(.4+fast)+nx*side*.6, fy=dy*(.4+fast)+ny*side*.6; const fl=Math.hypot(fx,fy)||1; fx/=fl; fy/=fl;
+  const r=(.1+Math.pow(Math.random(),2.2)*.72)*(.6+wet*.6)*Math.min(1.4,live.r/3+.4), ang=Math.atan2(fy,fx);
+  const put=o=>{ live.ops.push(o); drawOp(xInk,o); };
+  if (r>.38 && wet>.5) put([2,x,y,r*1.7,.1]);                                   // a big wet drop soaks a little into the paper
+  put([6,x,y,r*(1+fast*.9+Math.random()*.3),r*(.82+Math.random()*.2),ang]);
+  for (let i=0,n=2+(Math.random()*3|0); i<n; i++){ const a=Math.random()*6.283, s=r*(.55+Math.random()*.35);   // uneven rim
+    put([1,x+Math.cos(a)*s,y+Math.sin(a)*s,r*(.22+Math.random()*.3)]); }
+  if (fast>.25 && Math.random()<.6){ let s=r*.9;                                  // the drop runs on in its flight and thins out
+    for (const k of [.55,.38,.24]){ s+=r*(.45+Math.random()*.25); put([1,x+fx*s,y+fy*s,r*k*(.8+Math.random()*.4)]); } }
+  if (Math.random()<.3+fast*.3){ for (let i=0,n=1+(Math.random()*3|0); i<n; i++){ const s=r*(2.6+i*1.4+Math.random()*1.6);   // specks
+    put([1,x+fx*s+(Math.random()-.5)*r*1.4, y+fy*s+(Math.random()-.5)*r*1.4, Math.max(.06,r*(.12+Math.random()*.22))]); } }
 }
 let rafId=0;
 function dwellLoop(){
