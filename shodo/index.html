@@ -194,6 +194,16 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
 .chip[aria-current="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
 .chip .g{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:3px;background:var(--shu);color:#fff;font-size:11.5px;line-height:18px;display:none}
 .chip .g.on{display:block}
+/* the list of all characters is a screen of its own */
+#ovList{place-items:stretch;padding:0;background:var(--bg)}
+#ovList .panel{max-width:none;max-height:none;height:100%;border-radius:0;gap:12px;
+  padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+@media (min-width:640px){#ovList .panel{max-width:640px;margin:0 auto}}
+#ovList .panel{overflow:hidden}
+#ovList .gridScroll{flex:1;min-height:0;overflow:auto;padding:2px;margin:-2px}
+#ovList .grid20{gap:7px}
+#ovList .chip{height:auto;aspect-ratio:1/1.12;font-size:30px;padding-bottom:17px}
+#ovList .chip small{bottom:4px;padding:0 2px;font-size:clamp(8.6px,2.5vw,10px);line-height:1.08;white-space:normal}
 @media (prefers-reduced-motion:reduce){.top,.modes,.parts,.fb,.bar,.meter span{transition:none}}
 </style>
 </head>
@@ -269,8 +279,8 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
 <div class="ov" id="ovList" hidden>
   <div class="panel" role="dialog" aria-label="Все знаки">
     <div class="ph"><h2>Все знаки</h2><button id="cList">Закрыть</button></div>
-    <div class="grid20" id="grid20"></div>
-    <div class="src">Печать на карточке — лучшая оценка за знак.</div>
+    <div class="gridScroll"><div class="grid20" id="grid20"></div></div>
+    <div class="src">Выберите знак — сразу откроется лист для письма.</div>
   </div>
 </div>
 
@@ -812,7 +822,7 @@ function buildGrid(){
     const r=store[d.k]||{}, best=Math.max(r.trace||0,r.memory||0), s=best>=90?'優':best>=75?'良':best>=60?'可':'';
     b.innerHTML=`${d.k}<small>${d.ru}</small><span class="g ${s?'on':''}">${s}</span>`;
     b.setAttribute('aria-current',i===idx?'true':'false');
-    b.onclick=()=>{ $('#ovList').hidden=true; select(i); }; g.appendChild(b);
+    b.onclick=()=>{ $('#ovList').hidden=true; select(i); mode==='free'?startFree():startTracing(); }; g.appendChild(b);   // straight to the writing sheet
   });
 }
 
@@ -856,7 +866,7 @@ function openBrush(){ clearTimeout(focusT); $('#ovBrush').hidden=false; }
 function closeBrush(){ $('#ovBrush').hidden=true; if(document.body.classList.contains('focus')){ drawBg(); if(mode==='trace'&&!done&&!stampMode) exitFocus(9000); } }
 $('#bBrush').onclick=openBrush; $('#bBrush2').onclick=openBrush;
 $('#cBrush').onclick=closeBrush;
-$('#bList').onclick=()=>{ buildGrid(); $('#ovList').hidden=false; };
+$('#bList').onclick=()=>{ buildGrid(); $('#ovList').hidden=false; const c=$('#grid20 [aria-current="true"]'); if(c) c.scrollIntoView({block:'nearest'}); };
 $('#cList').onclick=()=>{ $('#ovList').hidden=true; };
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o){ if(o.id==='ovBrush') closeBrush(); else o.hidden=true; } }));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.ov').forEach(o=>o.hidden=true);
