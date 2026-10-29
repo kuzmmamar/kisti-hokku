@@ -183,7 +183,10 @@ body.focus .art,.sheet.peek .art,.sheet.mine .art{opacity:0;pointer-events:none}
 .sizes button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
 .src{font-size:13px;color:var(--muted)}
-.drySc{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:-8px;padding-left:min(46%,190px)}
+.sl{display:flex;flex-direction:column;gap:6px}
+.sl input[type=range]{width:100%;min-width:0;margin:0}
+.drySc{display:grid;grid-template-columns:1fr auto 1fr;font-size:11.5px;color:var(--muted);margin-top:-2px}
+.drySc span:nth-child(2){text-align:center}.drySc span:last-child{text-align:right}
 .tips{display:flex;flex-direction:column;gap:8px}
 .tips p{margin:0;font-size:13px;color:var(--muted)}
 .tips b{color:var(--fg);font-weight:600}
@@ -196,6 +199,9 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
 .chip[aria-current="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
 .chip .g{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:3px;background:var(--shu);color:#fff;font-size:11.5px;line-height:18px;display:none}
 .chip .g.on{display:block}
+.chip .ps{position:absolute;top:3px;right:3px;width:17px;height:17px;transform:rotate(-4deg);filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.2))}
+.chip .ps svg{display:block;width:100%;height:100%}
+#ovList .chip .ps{width:19px;height:19px}
 /* the list of all characters is a screen of its own */
 #ovList{place-items:stretch;padding:0;background:var(--bg)}
 #ovList .panel{max-width:none;max-height:none;height:100%;border-radius:0;gap:12px;
@@ -264,9 +270,9 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
     <div class="ph"><h2>Кисть</h2><button id="cBrush">Готово</button></div>
     <div class="row"><div class="sizes" role="group" aria-label="Толщина">
       <button data-s="4.2">Тонкая</button><button data-s="6">Средняя</button><button data-s="8.2">Толстая</button></div></div>
-    <div class="row"><label for="sens" class="src">Чувствительность к нажиму</label><input type="range" id="sens" min="0.4" max="1.8" step="0.05" value="1"></div>
-    <div class="row"><label for="dryRate" class="src">Как быстро пересыхает кисть</label><input type="range" id="dryRate" min="0" max="2" step="0.1" value="1"></div>
-    <div class="drySc"><span>не сохнет</span><span>как обычно</span><span>быстро</span></div>
+    <div class="sl"><label for="sens" class="src">Чувствительность к нажиму</label><input type="range" id="sens" min="0.4" max="1.8" step="0.05" value="1"></div>
+    <div class="sl"><label for="dryRate" class="src">Как быстро пересыхает кисть</label><input type="range" id="dryRate" min="0" max="2" step="0.1" value="1">
+      <div class="drySc" aria-hidden="true"><span>не сохнет</span><span>как обычно</span><span>быстро</span></div></div>
     <div class="src" id="src">Коснитесь листа: определю, чем вы пишете.</div>
     <div class="tips">
       <div class="lab">Окончания черт</div>
@@ -282,7 +288,7 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
   <div class="panel" role="dialog" aria-label="Все знаки">
     <div class="ph"><h2>Все знаки</h2><button id="cList">Закрыть</button></div>
     <div class="gridScroll"><div class="grid20" id="grid20"></div></div>
-    <div class="src">Выберите знак — откроется его страница.</div>
+    <div class="src">Выберите знак — откроется его страница. Печать на знаке — уже написан с тех пор, как вы открыли приложение.</div>
   </div>
 </div>
 
@@ -861,8 +867,9 @@ function buildGrid(){
   DATA.forEach((d,i)=>{ if(!order.includes(i)) order.push(i); });
   order.forEach(i=>{ const d=DATA[i];
     const b=document.createElement('button'); b.className='chip'; b.title=d.ru;
-    const r=store[d.k]||{}, best=Math.max(r.trace||0,r.memory||0), s=best>=90?'優':best>=75?'良':best>=60?'可':'';
-    b.innerHTML=`${d.k}<small>${d.ru}</small><span class="g ${s?'on':''}">${s}</span>`;
+    const done=practiced.get(d.k);
+    b.innerHTML=`${d.k}<small>${d.ru}</small>`+(done?`<span class="ps" title="Сегодня: печать ${SEALS[done].name}">${sealSvg(done)}</span>`:'');
+    if(done) b.classList.add('done');
     b.setAttribute('aria-current',i===idx?'true':'false');
     b.onclick=()=>{ $('#ovList').hidden=true; select(i); }; g.appendChild(b);   // to the character's page
   });
@@ -903,7 +910,8 @@ renderSeals();
 let stampMode=false;
 let stampKey='ichigo';
 function armStamp(on,key){ stampMode=on; if(key) stampKey=key; if(on) clearTimeout(focusT); document.querySelectorAll('#seals .sealBtn').forEach(b=>b.classList.toggle('armed',on&&b.dataset.seal===stampKey)); $('#stampHint').hidden=!on; }
-function placeSeal(e){ const p=toV(e); kuSeal={x:p.x,y:p.y,set:stampKey}; armStamp(false); document.body.classList.add('sealed'); clearFx(); setTimeout(()=>exitFocus(0),650); }
+const practiced=new Map();   // characters finished with a seal since the app was opened (not saved)
+function placeSeal(e){ const p=toV(e); kuSeal={x:p.x,y:p.y,set:stampKey}; practiced.set(DATA[idx].k,stampKey); armStamp(false); document.body.classList.add('sealed'); clearFx(); setTimeout(()=>exitFocus(0),650); }
 function openBrush(){ clearTimeout(focusT); $('#ovBrush').hidden=false; }
 function closeBrush(){ $('#ovBrush').hidden=true; if(document.body.classList.contains('focus')){ drawBg(); if(mode==='trace'&&!done&&!stampMode) exitFocus(9000); } }
 $('#bBrush').onclick=openBrush; $('#bBrush2').onclick=openBrush;
