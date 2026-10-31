@@ -2269,6 +2269,7 @@ const KOH=[{"ko":1,"a":"Бусон","y":"","j":["のうれんに","東風吹く�
   const sh=Math.max(screen.height,screen.width)===Math.max(innerHeight,innerWidth)?innerHeight:(innerWidth<innerHeight?screen.height:screen.width);
   const h=sa?Math.max(innerHeight,sh):innerHeight;document.documentElement.style.setProperty('--appH',h+'px');window.__scr={sa,sh,ih:innerHeight,h};};
   fit();addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,300));})();
+window.APPV='42 · 01.11.2026';
 (function(){
 'use strict';
 const ALL=[...RAD.map(x=>({...x,t:'rad'})),...KJ.map(x=>({...x,t:'kan'}))];
@@ -2403,7 +2404,7 @@ function viewPath(){
     h('button',{class:'btn ghost',onclick:()=>{S.unlockAll=!S.unlockAll;save();render();}},S.unlockAll?'Вернуть порядок уроков':'Открыть все уроки'),
     h('button',{class:'btn ghost',onclick:openBackup},'Резервная копия'),
     reset));
-  const sc=window.__scr||{};f.append(h('p',{class:'scrdiag'},'Экран '+screen.width+'×'+screen.height+' · окно '+innerWidth+'×'+innerHeight+(sc.sa?' · приложение, высота '+sc.h:' · браузер')));
+  const sc=window.__scr||{};f.append(h('p',{class:'scrdiag'},'Версия '+(window.APPV||'—')+' · Экран '+screen.width+'×'+screen.height+' · окно '+innerWidth+'×'+innerHeight+(sc.sa?' · приложение, высота '+sc.h:' · браузер')));
   return f;
 }
 function openBackup(){
