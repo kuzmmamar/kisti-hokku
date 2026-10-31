@@ -442,6 +442,14 @@ html,body{height:var(--appH,100%)!important}
 .pbtns .btn{padding:8px 10px;font-size:13.5px;width:100%;white-space:nowrap}
 .brand b.hk{white-space:nowrap;flex:none}
 .brand span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hkbtn{margin-top:8px;border:1px solid rgb(var(--sc));background:rgba(var(--sc),.12);color:var(--ink);border-radius:20px;padding:7px 14px;font-size:14px}
+.skh{cursor:pointer}
+button.kon{border:0;cursor:pointer;font:inherit;font-weight:600;font-size:13px}
+.hkh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:18px 0 6px}.hkh .kon{align-self:center}.hkh b{font:600 20px var(--f-kan);color:rgb(var(--sc))}.hkh span:not(.kon){font-weight:600}.hkh small{color:var(--ink2);font-size:12px}
+.hkg{display:flex;flex-direction:column;gap:8px}
+.hki{display:flex;flex-direction:column;gap:3px;text-align:left;background:var(--card);border:1px solid var(--line);border-left:3px solid rgb(var(--sc));border-radius:10px;padding:10px 12px;color:var(--ink)}
+.hkj{display:flex;flex-wrap:wrap;column-gap:.8em;font:17px/1.4 var(--f-kan)}.hkj i{font-style:normal;white-space:nowrap}
+.hkt{font-size:14px;line-height:1.4}.hki small{color:var(--ink2);font-size:12px}
 </style>
 
 </head>
@@ -2269,7 +2277,7 @@ const KOH=[{"ko":1,"a":"Бусон","y":"","j":["のうれんに","東風吹く�
   const sh=Math.max(screen.height,screen.width)===Math.max(innerHeight,innerWidth)?innerHeight:(innerWidth<innerHeight?screen.height:screen.width);
   const h=sa?Math.max(innerHeight,sh):innerHeight;document.documentElement.style.setProperty('--appH',h+'px');window.__scr={sa,sh,ih:innerHeight,h};};
   fit();addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,300));})();
-window.APPV='42 · 01.11.2026';
+window.APPV='43 · 01.11.2026';
 (function(){
 'use strict';
 const ALL=[...RAD.map(x=>({...x,t:'rad'})),...KJ.map(x=>({...x,t:'kan'}))];
@@ -2525,9 +2533,26 @@ function koQuotes(n){const out=[];
     const key=[...k.k].filter(c=>c>'一'||/[ぁ-ん]/.test(c));const ov={w18:'花の香は撞く',basho14:'すみれ草',w7:'軒の栗',w5:'植ゑて立ち去る'};const ln=u.lines.find(l=>ov[id]&&l.includes(ov[id]))||u.lines.find(l=>l.includes(k.k))||u.lines.find(l=>key.some(c=>c>'一'&&l.includes(c)))||u.lines[0];
     out.push(h('button',{class:'koq',onclick:()=>openUnit(u)},h('small',null,h('b',{lang:'ja'},k.k),' '+k.ru+' · '+u.author),h('span',{lang:'ja'},hlSegLines(u,'j').map(segs=>h('i',null,segs.map(s=>s.c?h('span',{class:HLC[s.c]},s.s):s.s))))));}));
   return out.length?h('div',{class:'koqs'},out):null;}
+function koEntries(n){const out=[];
+  if(typeof KOH!=='undefined')KOH.filter(e=>e.ko===n).forEach(e=>out.push({e}));
+  KIGO.filter(k=>KIGO_KO[k.k]===n).forEach(k=>k.u.forEach(id=>{const u=UNITS.find(x=>x.id===id);if(u)out.push({u,k});}));
+  return out;}
+function hokkuItem(it){
+  if(it.e){const e=it.e;return h('button',{class:'hki',onclick:()=>openKOH(e)},
+    h('span',{class:'hkj',lang:'ja'},hlLines(e.hj).map(segs=>h('i',null,segSpans(segs)))),
+    h('span',{class:'hkt'},segSpans(hlParse(e.ht))),h('small',null,e.a+(e.y?' · '+e.y:'')));}
+  const u=it.u;return h('button',{class:'hki',onclick:()=>{closeSheet();openUnit(u);}},
+    h('span',{class:'hkj',lang:'ja'},hlSegLines(u,'j').map(segs=>h('i',null,segSpans(segs)))),
+    h('span',{class:'hkt'},hlS(u,'t')),h('small',null,u.author+(u.year?' · '+u.year:'')+' · урок'));}
+function openHokkuList(title,sub,kos){const body=h('div',{class:'hkl'},h('h2',{style:'margin:2px 0 4px'},title),sub?h('p',{class:'tinfo',style:'text-align:left;margin:0 0 6px'},sub):null,hlLegend());
+  let total=0;kos.forEach(n=>{const k=KO[n-1],en=koEntries(n);total+=en.length;const s=seaOf(SEKKI[k.sk].s);
+    body.append(h('div',{class:'hkh',style:`--sc:${s.col}`},h('span',{class:'kon'},n),h('b',{lang:'ja'},k.k),h('span',null,k.ru),h('small',null,koRange(n-1))),
+      h('div',{class:'hkg',style:`--sc:${s.col}`},en.map(hokkuItem)));});
+  sheet(body);return total;}
+function seasonKos(sid,now){const all=[];for(let j=0;j<72;j++){const i=(now+j)%72;if(SEKKI[KO[i].sk].s===sid)all.push(i+1);}return all;}
 function koRow(i,cur){const k=KO[i];
   return h('div',{class:'ko'+(cur?' now':''),id:'ko'+k.n},
-    h('span',{class:'kon'},k.n),
+    h('button',{class:'kon','aria-label':'Все хокку микросезона '+k.n,onclick:()=>openHokkuList(k.k+' · '+k.ru,'Микросезон '+k.n+' из 72, '+koRange(i)+'.',[k.n])},k.n),
     h('div',{class:'kob'},h('div',{class:'kok'},kigoWord(k.k),cur?h('em',null,'сейчас'):null),
       h('div',{class:'kor',lang:'ja'},k.r),h('div',{class:'koro'},k.ro),h('b',null,k.ru),h('small',null,koRange(i)),
       h('div',{class:'kow'},h('span',null,'киго: '),h('span',{lang:'ja'},k.w.split(' ')[0]),' '+k.w.split(' ').slice(1).join(' ')),koQuotes(k.n)),
@@ -2542,6 +2567,7 @@ function viewKigo(){
     h('small',null,'Сейчас · '+ns.ru.toLowerCase()+' · '+nsk.k+' «'+nsk.ru+'» · ко '+nk.n+' из 72'),
     h('b',{lang:'ja'},nk.k),h('span',{lang:'ja',class:'kor'},nk.r),h('span',{class:'koro'},nk.ro),h('span',null,nk.ru+' · '+koRange(now)),
     h('small',null,'Дальше: '+KO[(now+1)%72].ru.toLowerCase()+' ('+KO[(now+1)%72].k+')')));
+  f.append(h('div',{class:'row kgq'},h('button',{class:'btn primary',onclick:()=>openHokkuList(nk.k+' · '+nk.ru,'Микросезон, который идёт сейчас: '+koRange(now)+'.',[nk.n])},'Хокку этого микросезона'),h('button',{class:'btn ghost',onclick:()=>openHokkuList('Хокку: '+ns.ru.toLowerCase(),'Все стихи сезона, начиная с сегодняшнего микросезона.',seasonKos(nsk.s,now))},'Весь сезон')));
   f.append(h('div',{class:'kgf',role:'tablist','aria-label':'Сезон'},
     [{id:'all',jp:'四季',ru:'Все'}].concat(KIGO_SEASONS).map(s=>h('button',{class:'kgc'+(kigoSeason===s.id?' on':''),style:s.col?`--sc:${s.col}`:'','aria-selected':String(kigoSeason===s.id),
       onclick:()=>{kigoSeason=s.id;render();}},h('span',{lang:'ja'},s.jp),s.ru))));
@@ -2550,9 +2576,10 @@ function viewKigo(){
   for(let j=0;j<72;j++){const i=(now+j)%72,k=KO[i],sk=SEKKI[k.sk],s=seaOf(sk.s);
     if(kigoSeason!=='all'&&kigoSeason!==s.id)continue;
     if(s.id!==curSea){curSea=s.id;curSk=null;
-      f.append(h('div',{class:'kgs',style:`--sc:${s.col}`},h('b',{lang:'ja'},s.jp),h('div',null,h('h3',null,s.ru+(j===0?' · сейчас':'')),h('small',{class:'kgsm'},'6 сэкки · 18 микросезонов'),h('p',null,s.note))));}
+      f.append(h('div',{class:'kgs',style:`--sc:${s.col}`},h('b',{lang:'ja'},s.jp),h('div',null,h('h3',null,s.ru+(j===0?' · сейчас':'')),h('small',{class:'kgsm'},'6 сэкки · 18 микросезонов'),h('p',null,s.note),
+        h('button',{class:'hkbtn',style:`--sc:${s.col}`,onclick:()=>openHokkuList('Хокку: '+s.ru.toLowerCase(),'Все стихи сезона по микросезонам'+(s.id===nsk.s?', начиная с сегодняшнего':'')+'. Нажмите на стих, чтобы открыть его.',seasonKos(s.id,now))},s.jp+' Все хокку сезона →'))));}
     if(k.sk!==curSk){curSk=k.sk;box=h('div',{class:'sekki',style:`--sc:${s.col}`});
-      box.append(h('div',{class:'skh'},h('b',{lang:'ja'},sk.k),h('div',null,h('span',{lang:'ja'},sk.r),h('strong',null,sk.ru),h('small',null,'с '+sk.d[1]+' '+MON[sk.d[0]-1]+' · сэкки '+(k.sk+1)+' из 24'))));
+      const skn=k.sk;box.append(h('div',{class:'skh',role:'button',tabindex:'0',onclick:()=>openHokkuList(SEKKI[skn].k+' · '+SEKKI[skn].ru,'Хокку трёх микросезонов этого сэкки.',[skn*3+1,skn*3+2,skn*3+3])},h('b',{lang:'ja'},sk.k),h('div',null,h('span',{lang:'ja'},sk.r),h('strong',null,sk.ru),h('small',null,'с '+sk.d[1]+' '+MON[sk.d[0]-1]+' · сэкки '+(k.sk+1)+' из 24'))));
       f.append(box);}
     box.append(koRow(i,i===now));}
   return f;
