@@ -453,6 +453,9 @@ button.kon{border:0;cursor:pointer;font:inherit;font-weight:600;font-size:13px}
 .kcat{display:flex;gap:12px;align-items:center;margin:22px 0 8px}.kcat>b{font:600 36px/1 var(--f-kan);color:rgb(var(--sc,236,233,226))}
 .kcat h3{margin:0;font-size:17px}.kcat small{color:var(--ink2);font-size:12.5px}
 .kmode{margin:4px 0 10px}
+.kbig.tapwrite{cursor:pointer;position:relative;transition:border-color .15s}
+.kbig.tapwrite:active{border-color:var(--ai)}
+.tapbrush{position:absolute;right:5px;bottom:5px;width:18px;height:18px;opacity:.75;pointer-events:none}.tapbrush svg{width:100%;height:100%}
 </style>
 
 </head>
@@ -2284,7 +2287,7 @@ const KSEASON_CORE={spring:'春梅桜花菜蝶雀鶯霞蛙咲柳暖艹木',summe
   const sh=Math.max(screen.height,screen.width)===Math.max(innerHeight,innerWidth)?innerHeight:(innerWidth<innerHeight?screen.height:screen.width);
   const h=sa?Math.max(innerHeight,sh):innerHeight;document.documentElement.style.setProperty('--appH',h+'px');window.__scr={sa,sh,ih:innerHeight,h};};
   fit();addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,300));})();
-window.APPV='46 · 01.11.2026';
+window.APPV='47 · 01.11.2026';
 (function(){
 'use strict';
 const ALL=[...RAD.map(x=>({...x,t:'rad'})),...KJ.map(x=>({...x,t:'kan'}))];
@@ -2649,8 +2652,13 @@ function kanjiCard(it,isLearn){
 }
 function openKanji(g){
   const it=M[g];
-  sheet(h('div',null,kanjiCard(it,false),
-    h('div',{class:'row',style:'margin-top:14px'},h('button',{class:'btn primary',onclick:()=>{closeSheet();runSession([{t:'trace',it,free:true}],{free:true});}},'Прописать кистью'))));
+  const write=()=>{closeSheet();runSession([{t:'trace',it,free:true}],{free:true});};
+  const card=kanjiCard(it,false);const big=card.querySelector('.kbig');
+  if(big){big.classList.add('tapwrite');big.setAttribute('role','button');big.setAttribute('tabindex','0');big.setAttribute('aria-label','Прописать кистью');big.title='Нажмите, чтобы прописать кистью';
+    big.addEventListener('click',write);big.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();write();}});
+    big.append(h('span',{class:'tapbrush','aria-hidden':'true',html:ico.brush}));}
+  sheet(h('div',null,card,
+    h('div',{class:'row',style:'margin-top:14px'},h('button',{class:'btn primary',onclick:write},'Прописать кистью'))));
 }
 
 // ---------- sheet ----------
