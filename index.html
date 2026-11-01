@@ -452,7 +452,7 @@ button.kon{border:0;cursor:pointer;font:inherit;font-weight:600;font-size:13px}
 .hkt{font-size:14px;line-height:1.4}.hki small{color:var(--ink2);font-size:12px}
 .kcat{display:flex;gap:12px;align-items:center;margin:22px 0 8px}.kcat>b{font:600 36px/1 var(--f-kan);color:rgb(var(--sc,236,233,226))}
 .kcat h3{margin:0;font-size:17px}.kcat small{color:var(--ink2);font-size:12.5px}
-.tabs button{min-width:0;font-size:11px}
+.kmode{margin:4px 0 10px}
 </style>
 
 </head>
@@ -464,7 +464,6 @@ button.kon{border:0;cursor:pointer;font:inherit;font-weight:600;font-size:13px}
     <button role="tab" id="tab-poems" aria-selected="false"><span class="tk">句</span>Хокку</button>
     <button role="tab" id="tab-kigo" aria-selected="false"><span class="tk">季</span>Киго</button>
     <button role="tab" id="tab-kanji" aria-selected="false"><span class="tk">字</span>Знаки</button>
-    <button role="tab" id="tab-all" aria-selected="false"><span class="tk">全</span>Все знаки</button>
   </nav>
 </div>
 
@@ -2285,7 +2284,7 @@ const KSEASON_CORE={spring:'春梅桜花菜蝶雀鶯霞蛙咲柳暖艹木',summe
   const sh=Math.max(screen.height,screen.width)===Math.max(innerHeight,innerWidth)?innerHeight:(innerWidth<innerHeight?screen.height:screen.width);
   const h=sa?Math.max(innerHeight,sh):innerHeight;document.documentElement.style.setProperty('--appH',h+'px');window.__scr={sa,sh,ih:innerHeight,h};};
   fit();addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,300));})();
-window.APPV='45 · 01.11.2026';
+window.APPV='46 · 01.11.2026';
 (function(){
 'use strict';
 const ALL=[...RAD.map(x=>({...x,t:'rad'})),...KJ.map(x=>({...x,t:'kan'}))];
@@ -2372,12 +2371,12 @@ function decorate(){const v=$('#view');if(!v)return;v.querySelectorAll('.scrolla
 let decoT=null;addEventListener('resize',()=>{clearTimeout(decoT);decoT=setTimeout(decorate,250);});
 // ---------- tabs ----------
 let tab='path';
-['path','poems','kigo','kanji','all'].forEach(t=>$('#tab-'+t).addEventListener('click',()=>{tab=t;render();}));
+['path','poems','kigo','kanji'].forEach(t=>$('#tab-'+t).addEventListener('click',()=>{tab=t;render();}));
 function render(){
-  ['path','poems','kigo','kanji','all'].forEach(t=>$('#tab-'+t).setAttribute('aria-selected',String(t===tab)));
+  ['path','poems','kigo','kanji'].forEach(t=>$('#tab-'+t).setAttribute('aria-selected',String(t===tab)));
   const v=$('#view'); v.innerHTML=''; v.scrollTop=0;
   v.append(topBar());
-  if(tab==='path') v.append(viewPath()); else if(tab==='poems') v.append(viewPoems()); else if(tab==='kigo') v.append(viewKigo()); else if(tab==='all') v.append(viewAll()); else v.append(viewKanji());
+  if(tab==='path') v.append(viewPath()); else if(tab==='poems') v.append(viewPoems()); else if(tab==='kigo') v.append(viewKigo()); else v.append(viewKanji());
   fixExpl(v);
   requestAnimationFrame(()=>requestAnimationFrame(decorate));
 }
@@ -2599,8 +2598,11 @@ function ktile(it){
     PIC[it.g]?h('span',{class:'tpic'},picImg(it.g)):null,h('span',{class:'g'},it.g),h('span',{class:'m'},it.m),
     h('span',{class:'meter','aria-hidden':'true'},[1,2,3,4,5].map(i=>h('i',{class:i<=lv?'on':''}))));
 }
+let kanjiMode='units';
 function viewKanji(){
   const f=document.createDocumentFragment();
+  f.append(h('div',{class:'kgf kmode',role:'tablist'},[['units','字','По урокам'],['all','全','Все знаки по сезонам']].map(([m,jp,ru])=>h('button',{class:'kgc'+(kanjiMode===m?' on':''),'aria-selected':String(kanjiMode===m),onclick:()=>{kanjiMode=m;render();}},h('span',{lang:'ja'},jp),ru))));
+  if(kanjiMode==='all'){f.append(viewAll());return f;}
   f.append(h('div',{class:'how'},
     h('b',null,'Как читать заметки каллиграфа. '),
     'Каждый знак проходит путь от кайсё (уставное письмо) к гёсё (полускоропись) и сосё (скоропись). ',
