@@ -221,6 +221,11 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
 .memGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .memTh{padding:0;min-height:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#F8F6EF}
 .memTh img{display:block;width:100%;height:auto}
+.memItem{position:relative;min-width:0}
+.memTh{display:block;width:100%}
+.memX{position:absolute;top:5px;right:5px;min-height:0;height:26px;min-width:26px;padding:0 7px;border:0;border-radius:13px;
+  background:rgba(28,31,34,.55);color:#fff;font-size:16px;line-height:26px;font-weight:500}
+.memX.sure{background:#B2221A;font-size:12.5px}
 .memEmpty{color:var(--muted);font-size:14px;line-height:1.5;margin:8px 0}
 #ovMemView{z-index:25}
 .memView{align-items:center}
@@ -1064,9 +1069,19 @@ async function renderMem(){
     h.append(kk,ru,n);
     const g=document.createElement('div'); g.className='memGrid';
     list.forEach(w=>{ const u=URL.createObjectURL(w.blob); memURLs.push(u);
+      const it=document.createElement('div'); it.className='memItem';
       const b=document.createElement('button'); b.type='button'; b.className='memTh'; b.setAttribute('aria-label',k+' — '+memDate(w.ts));
       const im=document.createElement('img'); im.src=u; im.alt=''; if(w.w&&w.h) im.style.aspectRatio=w.w+'/'+w.h; b.appendChild(im);
-      b.onclick=()=>openWork(w,u); g.appendChild(b); });
+      b.onclick=()=>openWork(w,u);
+      // delete right on the sheet: first tap asks, second tap deletes
+      const x=document.createElement('button'); x.type='button'; x.className='memX'; x.textContent='×'; x.setAttribute('aria-label','Удалить работу');
+      let t0=0; x.onclick=async()=>{
+        if(!x.classList.contains('sure')){ x.classList.add('sure'); x.textContent='Удалить?'; clearTimeout(t0); t0=setTimeout(()=>{ x.classList.remove('sure'); x.textContent='×'; },3000); return; }
+        clearTimeout(t0); try{ await MEM.del(w.id); }catch(e){ return; }
+        it.remove(); const left=g.children.length; n.textContent=left; if(!left) sec.remove();
+        if(!box.querySelector('.memItem')) box.innerHTML='<p class="memEmpty">Здесь будут работы, скреплённые печатью <b>記念</b> «на память». Поставьте её на листе — рисунок сохранится сюда без серого образца.</p>';
+        updMemCount(); };
+      it.append(b,x); g.appendChild(it); });
     sec.append(h,g); box.appendChild(sec); } }
 function openWork(w,u){ memOpen=w; $('#memBig').src=u; $('#memBig').alt=w.k; $('#memMeta').textContent=w.k+' · '+((DATA.find(x=>x.k===w.k)||{}).ru||'')+' · '+memDate(w.ts);
   const del=$('#memDel'); del.textContent='Удалить'; del.dataset.sure=''; $('#ovMemView').hidden=false; }
