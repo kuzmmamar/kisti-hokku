@@ -297,8 +297,8 @@ input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
 <div class="ov" id="ovBrush" hidden>
   <div class="panel" role="dialog" aria-label="Кисть">
     <div class="ph"><h2>Кисть</h2><button id="cBrush">Готово</button></div>
-    <div class="row"><div class="sizes" role="group" aria-label="Толщина">
-      <button data-s="4.2">Тонкая</button><button data-s="6">Средняя</button><button data-s="8.2">Толстая</button></div></div>
+    <div class="sl"><label for="bSize" class="src">Толщина кисти</label><input type="range" id="bSize" min="3" max="9" step="0.1" value="6">
+      <div class="drySc" aria-hidden="true"><span>тонкая</span><span>средняя</span><span>толстая</span></div></div>
     <div class="sl"><label for="sens" class="src">Чувствительность к нажиму</label><input type="range" id="sens" min="0.4" max="1.8" step="0.05" value="1"></div>
     <div class="sl"><label for="dryRate" class="src">Как быстро пересыхает кисть</label><input type="range" id="dryRate" min="0" max="2" step="0.1" value="1">
       <div class="drySc" aria-hidden="true"><span>не сохнет</span><span>как обычно</span><span>быстро</span></div></div>
@@ -1003,9 +1003,9 @@ function buildGrid(){
 document.querySelectorAll('.seg button').forEach(b=>{
   b.onclick=()=>{ mode=b.dataset.m; document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b)); persist(); reset(); };
 });
-document.querySelectorAll('.sizes button').forEach(b=>{
-  b.onclick=()=>{ prefs.size=+b.dataset.s; document.querySelectorAll('.sizes button').forEach(x=>x.setAttribute('aria-pressed',x===b)); persist(); drawBg(); };
-});
+$('#bSize').value=clamp(+prefs.size||6,3,9);
+$('#bSize').oninput=e=>{ prefs.size=+e.target.value; drawBg(); };
+$('#bSize').onchange=()=>persist();
 $('#sens').value=prefs.sens; $('#sens').oninput=e=>{ prefs.sens=+e.target.value; persist(); };
 $('#dryRate').value=prefs.dry??1; $('#dryRate').oninput=e=>{ prefs.dry=+e.target.value; persist(); };
 $('#bClear').onclick=reset;
@@ -1106,7 +1106,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySele
   if(e.target.tagName==='INPUT')return; if(e.key==='ArrowRight') next(); if(e.key==='ArrowLeft') prev(); });
 
 document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===mode));
-document.querySelectorAll('.sizes button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.s===prefs.size));
+
 resize(); select(deck[pos]);
 </script>
 <script>
