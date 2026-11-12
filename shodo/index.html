@@ -594,6 +594,7 @@ function drawOp(c, o){
   if (o[0]===0){ c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); }
   else if (o[0]===1){ c.beginPath(); c.arc(o[1],o[2],o[3],0,7); c.fill(); }
   else if (o[0]===6){ c.beginPath(); c.ellipse(o[1],o[2],o[3],o[4],o[5],0,6.2832); c.fill(); }
+  else if (o[0]===7){ c.fillStyle=grain(c,o[6]); c.beginPath(); c.ellipse(o[1],o[2],o[3],o[4],o[5],0,6.2832); c.fill(); c.fillStyle=INK; }
   else if (o[0]===5){ c.strokeStyle=grain(c,o[6]); c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); c.strokeStyle=INK; }
   else if (o[0]===3){ c.globalAlpha=o[6]; c.lineWidth=o[5]; c.beginPath(); c.moveTo(o[1],o[2]); c.lineTo(o[3],o[4]); c.stroke(); c.globalAlpha=1; }
   else { const g=c.createRadialGradient(o[1],o[2],0,o[1],o[2],o[3]);
@@ -646,7 +647,7 @@ function beginStroke(e){
   live.r=r;
   const exp=!live.free ? strokesOf(idx)[cur] : null, kind=exp ? exp.kind : '';
   live.kind=kind;
-  const dab = live.free ? [1,p.x,p.y,r*1.08]
+  const dab = live.free ? [6,p.x,p.y,r*.8,r*.6,Math.PI/4]                 // a light touch, not a ball
     : (kind==='dot'||kind==='sweep') ? [1,p.x,p.y,r*.5]
     : [6,p.x-r*.05,p.y-r*.05,r*1.3,r*.98,Math.PI/4];          // 起筆 at 45°
   live.ops.push(dab); prepInk(xInk); drawOp(xInk,dab);
@@ -742,13 +743,15 @@ function dwellLoop(){
   const tick=()=>{
     if(!live) return;
     const now=performance.now(), held=now-live.still;
-    if (held>110){
-      // holding the brush still: ink spreads into the paper (nijimi), more with pressure and time
-      const grow=clamp((held-110)/1500,0,1), pr=shape(live.p);
-      const R=live.r*(1+grow*1.25)*(.75+pr*.5);
-      if (R>live.bleedR+.12){
-        const L=live.last, op=[2,L.x,L.y,R*1.15,.5+.35*pr]; live.ops.push(op); prepInk(xInk); drawOp(xInk,op);
-        const core=[1,L.x,L.y,R*.82]; live.ops.push(core); drawOp(xInk,core);
+    if (held>260){
+      // holding the brush still: the pressed brush head soaks into the paper (nijimi).
+      // Its print is the slanted head of a brush, not a ball, and the bleed has the paper's fibrous edge.
+      const grow=clamp((held-260)/2400,0,1), pr=shape(live.p);
+      const R=live.r*(1+grow*.5)*(.9+pr*.2);
+      if (R>live.bleedR+.18){
+        const L=live.last, a=Math.PI/4;
+        const bleed=[7,L.x,L.y,R*1.22,R*1.0,a,clamp(Math.round(1+grow*3+pr*2),0,GL-1)]; live.ops.push(bleed); prepInk(xInk); drawOp(xInk,bleed);
+        const core=[6,L.x,L.y,R*.95,R*.76,a]; live.ops.push(core); drawOp(xInk,core);
         live.bleedR=R; live.ink=Math.min(1,live.ink+.01);
       }
       showMeter(clamp(.3+grow*.7,0,1),true);
